@@ -1,13 +1,12 @@
 """Workflow and action definitions."""
 
-import json
 import os
 import platform
 import subprocess
 import webbrowser
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional
 
 # Try to import pyperclip for clipboard support
 try:
@@ -47,6 +46,9 @@ class WorkflowItem:
     description: str
     action: str
     args: dict
+    icon: str = "🚀"                              # per-workflow emoji icon
+    priority: int = 100                           # lower = shown first
+    keywords: List[str] = field(default_factory=list)  # prefix keywords, e.g. ["g", "google"]
 
     @classmethod
     def from_dict(cls, item: dict) -> "WorkflowItem":
@@ -56,10 +58,25 @@ class WorkflowItem:
             description=item.get("description", ""),
             action=item.get("action", ""),
             args=item.get("args", {}) or {},
+            icon=item.get("icon", "🚀"),
+            priority=item.get("priority", 100),
+            keywords=item.get("keywords", []),
         )
 
-    def run(self) -> None:
-        ActionRegistry.run(self.action, self.args)
+    def run(self, query: str = "") -> None:
+        """Execute the action, substituting ``{query}`` placeholders in args."""
+        resolved: dict = {}
+        for k, v in self.args.items():
+            if isinstance(v, str):
+                resolved[k] = v.replace("{query}", query)
+            elif isinstance(v, list):
+                resolved[k] = [
+                    i.replace("{query}", query) if isinstance(i, str) else i
+                    for i in v
+                ]
+            else:
+                resolved[k] = v
+        ActionRegistry.run(self.action, resolved)
 
 
 def _run_subprocess(command: list[str], cwd: str | Path | None = None) -> None:

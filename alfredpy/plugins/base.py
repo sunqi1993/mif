@@ -69,6 +69,8 @@ class PluginResult:
     action_args: tuple = ()
     score: float = 0.0
     plugin_id: str = ""
+    icon: str = ""          # per-result icon; overrides plugin meta.icon in UI
+    extra: dict = field(default_factory=dict)  # arbitrary UI/behaviour metadata
 
 
 # ── Base plugin ───────────────────────────────────────────────────────────────
