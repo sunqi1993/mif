@@ -60,23 +60,25 @@ class TestLoadConfig:
 
     def test_load_config_default_path(self):
         """Test loading config with default path."""
-        with patch(
-            "alfredpy.config.DEFAULT_CONFIG_PATH", "/tmp/test_alfredpy_config.json"
-        ):
-            # Create a temporary config file
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".json", delete=False
-            ) as f:
-                json.dump({"workflows": [{"id": "test"}]}, f)
-                temp_path = f.name
+        from pathlib import Path as PathLib
+        
+        # Create temp config file
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as f:
+            json.dump({"workflows": [{"id": "test"}]}, f)
+            temp_path = f.name
 
-            try:
-                with patch("alfredpy.config.DEFAULT_CONFIG_PATH", temp_path):
-                    config = load_config()
-                    assert "workflows" in config
-                    assert len(config["workflows"]) == 1
-            finally:
-                os.unlink(temp_path)
+        try:
+            # Patch DEFAULT_CONFIG_PATH and PROJECT_CONFIG_PATH
+            with patch("alfredpy.config.DEFAULT_CONFIG_PATH", temp_path), \
+                 patch("alfredpy.config.PROJECT_CONFIG_PATH", PathLib("/nonexistent/path.json")):
+                config = load_config()
+                assert "workflows" in config
+                assert len(config["workflows"]) == 1
+        finally:
+            os.unlink(temp_path)
+
 
     def test_load_config_custom_path(self, tmp_path):
         """Test loading config with custom path."""

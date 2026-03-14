@@ -17,7 +17,8 @@
 | 文档 | 说明 |
 |------|------|
 | [架构设计](docs/dev/ARCHITECTURE.md) | 项目架构说明 |
-| [Flet 兼容性](docs/dev/FLET_COMPATIBILITY.md) | Flet API 适配指南 |
+| [插件配置系统](docs/dev/PLUGIN_CONFIG.md) | 配置文件位置、格式、@settings 命令、API 参考、新插件声明配置项 |
+| [Flet API 参考](docs/dev/FLET_COMPATIBILITY.md) | v0.82.2 组件参数完整列表、踩坑记录、常用模式速查（Agent 必读） |
 | [日志设计](docs/dev/LOGGING_DESIGN.md) | 日志系统实现 |
 
 ## 🤖 Agent 技能 (.opencode/skills/)
@@ -41,18 +42,22 @@
 ```
 alfredpy/
 ├── README.md                  # 项目主文档
-├── DOCS_INDEX.md             # 本文档索引
+├── DOCS_INDEX.md              # 本文档索引
+├── config/                    # ⭐ 项目级配置（优先于 ~/.alfredpy/）
+│   ├── plugin_configs.json    #   插件参数 + 触发词覆盖
+│   └── workflows.json         #   工作流定义
 ├── docs/
-│   ├── user/                 # 用户文档
+│   ├── user/                  # 用户文档
 │   │   ├── QUICKSTART.md
 │   │   ├── STARTUP_GUIDE.md
 │   │   └── LOGGING_SYSTEM.md
-│   └── dev/                  # 开发文档
+│   └── dev/                   # 开发文档
 │       ├── ARCHITECTURE.md
+│       ├── PLUGIN_CONFIG.md   #   插件配置系统（新）
 │       ├── FLET_COMPATIBILITY.md
 │       └── LOGGING_DESIGN.md
 └── .opencode/
-    └── skills/               # Agent 技能
+    └── skills/                # Agent 技能
         ├── troubleshooting.md
         └── development.md
 ```

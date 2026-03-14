@@ -45,14 +45,14 @@ class TestLauncherUI:
         """Test launcher module imports successfully."""
         from alfredpy.gui import launcher
 
-        assert hasattr(launcher, 'launch_gui')
-        assert hasattr(launcher, 'create_launcher_ui')
+        assert hasattr(launcher, "launch_gui")
 
-    def test_search_result_item_creation(self):
-        """Test SearchResultItem creation."""
-        from alfredpy.gui import launcher
+    def test_result_item_creation(self):
+        """Test ResultItem creation."""
+        from alfredpy.gui.launcher import ResultItem
 
-        assert launcher is not None
+        item = ResultItem(title="Test", subtitle="Test Desc", icon="🚀")
+        assert item is not None
 
 
 class TestGUIIntegration:
@@ -64,24 +64,25 @@ class TestGUIIntegration:
 
         assert callable(launch_gui)
 
-    @patch("alfredpy.gui.launcher.create_launcher_ui")
-    def test_launcher_ui_creation(self, mock_create_ui):
-        """Test launcher UI creation."""
+    @patch("alfredpy.config.load_config")
+    @patch("alfredpy.gui.launcher.ft.app")
+    def test_gui_launch_with_workflows(self, mock_app, mock_load_config):
+        """Test GUI launch with workflows."""
+        from alfredpy.gui.launcher import launch_gui
         from alfredpy.workflow import WorkflowItem
-        from alfredpy.gui import launcher
 
         workflows = [
-            WorkflowItem.from_dict({
-                "id": "test",
-                "name": "Test",
-                "description": "Test workflow",
-                "action": "print",
-                "args": {"text": "Test"}
-            })
+            WorkflowItem.from_dict(
+                {
+                    "id": "test1",
+                    "name": "Test Workflow",
+                    "description": "Test",
+                    "action": "print",
+                    "args": {"text": "Test"},
+                }
+            )
         ]
 
-        mock_page = MagicMock()
-        mock_page.window = MagicMock()
-
-        launcher.create_launcher_ui(mock_page, workflows)
-        assert mock_create_ui.called or True
+        mock_load_config.return_value = workflows
+        launch_gui()
+        mock_app.assert_called_once()

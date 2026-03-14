@@ -1,0 +1,37 @@
+[
+  {
+    "id": "demo1",
+    "name": "🎉 演示：打印问候",
+    "description": "打印 Hello World 到终端",
+    "action": "print",
+    "args": {"text": "Hello from AlfredPy! 🚀"}
+  },
+  {
+    "id": "demo2",
+    "name": "🌐 演示：打开 GitHub",
+    "description": "在浏览器中打开 GitHub",
+    "action": "open_url",
+    "args": {"url": "https://github.com"}
+  },
+  {
+    "id": "demo3",
+    "name": "⚡ 演示：运行测试",
+    "description": "运行 AlfredPy 测试套件",
+    "action": "run",
+    "args": {"command": ["pytest", "--no-cov", "-q"]}
+  },
+  {
+    "id": "demo4",
+    "name": "📋 演示：复制到剪贴板",
+    "description": "复制文本到剪贴板",
+    "action": "copy_to_clipboard",
+    "args": {"text": "AlfredPy 工作正常！"}
+  },
+  {
+    "id": "demo5",
+    "name": "🔔 演示：发送通知",
+    "description": "发送桌面通知",
+    "action": "notify",
+    "args": {"title": "AlfredPy", "message": "工作流配置成功！"}
+  }
+]

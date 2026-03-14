@@ -1,0 +1,8 @@
+{
+  "_comment": "插件配置文件 — 由 AlfredPy 自动维护，也可手动编辑（重启后生效）",
+  "_comment_keys": {
+    "_keywords": "list[str]  覆盖插件的前缀触发词（输入时直接匹配）",
+    "_at_keyword": "str        覆盖插件的 @-触发关键词（在搜索框输入 @xxx 触发）",
+    "其他键": "由插件在 config_options 中声明的具体参数"
+  }
+}
