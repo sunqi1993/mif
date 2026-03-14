@@ -1,4 +1,4 @@
-"""单例 GUI：通过 Unix socket 与已有进程通信，实现「只唤起一个窗口」。"""
+"""单例 GUI：通过 Unix socket 与已有进程通信，实现只唤起一个窗口。"""
 
 import os
 import socket

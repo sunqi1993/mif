@@ -81,7 +81,7 @@ class TestMain:
         assert mock_print.call_count >= 1
 
     @patch("mif.main._load_workflows")
-    @patch("mif.gui.launcher.launch_gui")
+    @patch("mif.gui_qt.launcher.launch_gui")
     def test_main_gui_flag(self, mock_launch_gui, mock_load):
         """Test main with --gui flag."""
         from mif.main import main

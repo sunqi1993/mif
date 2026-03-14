@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from mif.gui import singleton
+from mif.gui_qt import singleton
 
 
 log_dir = Path(__file__).parent.parent.parent / "logs"
@@ -38,7 +38,7 @@ log_dir.mkdir(exist_ok=True)
 logger = logging.getLogger("AlfredPy-QtWidgets")
 logger.setLevel(logging.DEBUG)
 
-_fh = logging.FileHandler(log_dir / "mif_qml.log", encoding="utf-8", mode="a")
+_fh = logging.FileHandler(log_dir / "mif_qt.log", encoding="utf-8", mode="a")
 _fh.setLevel(logging.DEBUG)
 _fh.setFormatter(
     logging.Formatter(

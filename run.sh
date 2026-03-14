@@ -34,9 +34,9 @@ fi
 
 if ! "$PYTHON_BIN" -c "import PySide6" >/dev/null 2>&1; then
   echo "❌ 缺少 PySide6，请先安装："
-  echo "   uv pip install -e '.[qml]'"
+  echo "   uv pip install -e '.[qt]'"
   echo "   或 pip install PySide6>=6.5.0"
   exit 1
 fi
 
-exec "$PYTHON_BIN" -m mif.gui_qml.launcher "$@"
+exec "$PYTHON_BIN" -m mif.gui_qt.launcher "$@"

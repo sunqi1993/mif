@@ -10,27 +10,23 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "prompt_toolkit>=3.0",
-    "flet>=0.21.0",
     "pynput>=1.7.6",
 ]
 
 [project.optional-dependencies]
 search = ["thefuzz>=0.19.0"]
 clipboard = ["pyperclip>=1.8.0"]
-menubar = ["pyobjc-framework-Cocoa>=10.0"]
-qml = ["PySide6>=6.5.0"]
+qt = ["PySide6>=6.5.0"]
 all = [
     "prompt_toolkit>=3.0",
-    "flet>=0.21.0",
     "pynput>=1.7.6",
     "thefuzz>=0.19.0",
     "pyperclip>=1.8.0",
-    "pyobjc-framework-Cocoa>=10.0",
     "PySide6>=6.5.0",
 ]
 [project.scripts]
 mif = "mif.main:main"
-mif-qml = "mif.gui_qml.launcher:launch_gui"
+mif-qt = "mif.gui_qt.launcher:_main"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]

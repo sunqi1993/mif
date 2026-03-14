@@ -36,9 +36,9 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument("--gui", "-g", action="store_true", help="Launch GUI mode")
     args = parser.parse_args(argv)
 
-    # GUI mode - launch Flet application
+    # GUI mode - launch Qt Widgets application
     if args.gui:
-        from mif.gui.launcher import launch_gui
+        from mif.gui_qt.launcher import launch_gui
         launch_gui(args.config)
         return 0
 
