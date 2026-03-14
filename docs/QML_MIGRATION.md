@@ -1,6 +1,7 @@
-# PyQML 迁移指南
+# QML 迁移指南（历史归档）
 
-本文档描述如何从 Flet UI 框架迁移到 PyQML (Qt Quick) 框架。
+> 本文档仅用于记录历史迁移过程。  
+> 当前项目已切换为 **Qt Widgets** 实现，代码位于 `mif/gui_qt/`，不再使用 QML 文件渲染。
 
 ## 核心优势
 
@@ -17,17 +18,11 @@ PySide6 提供了**统一的跨平台解决方案**，无需额外依赖：
 
 ```
 mif/
-├── gui/                    # 原 Flet 实现 (保留兼容)
-│   ├── launcher.py
-│   └── ...
-├── gui_qml/                # PyQML 实现 (统一方案)
+├── gui_qt/                 # 当前 Qt Widgets 实现（现行）
 │   ├── __init__.py
-│   ├── launcher.py         # Python 后端 + 桥接 + 托盘 + 热键
-│   └── qml/                # QML UI 文件
-│       ├── Main.qml
-│       ├── Style.qml
-│       └── components/
-└── start_gui_qml.py        # 统一启动入口
+│   ├── launcher.py
+│   └── singleton.py
+└── (本节原 gui_qml/qml 目录仅用于迁移历史说明)
 
 ## 架构对比
 
@@ -132,38 +127,34 @@ TextField {
 }
 ```
 
-## 安装与运行
+## 当前运行方式（Qt Widgets）
 
 ### 安装依赖
 ```bash
-# 安装 PySide6 (包含 GUI + 托盘)
-pip install PySide6>=6.5.0
+# 安装完整依赖
+pip install -e ".[all]"
 
-# 安装全局热键支持 (可选)
-pip install pynput>=1.7.6
-
-# 或安装完整依赖
-pip install -e ".[qml]"
+# 或仅安装 Qt 相关依赖
+pip install -e ".[qt]"
 ```
 
 ### 运行方式
 
 ```bash
-# 默认启动 (带托盘 + 热键)
-python start_gui_qml.py
+# 默认启动（带托盘 + 热键）
+./run.sh
 
-# 无托盘模式
-python start_gui_qml.py --no-tray
+# 无托盘
+./run.sh --no-tray
 
-# 无热键模式
-python start_gui_qml.py --no-hotkey
+# 无热键
+./run.sh --no-hotkey
 
 # 自定义热键
-python start_gui_qml.py --hotkey "<cmd>+space>"
+./run.sh --hotkey "<cmd>+space>"
 
-# 安装后命令行
-pip install -e .
-mif-qml
+# 统一入口
+python -m mif --gui
 ```
 
 ## 系统托盘

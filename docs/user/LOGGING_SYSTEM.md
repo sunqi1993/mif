@@ -1,11 +1,12 @@
-# 📝 AlfredPy 日志系统
+# 📝 mif 日志系统
 
 ## 日志位置
 
 ```
-alfredpy/
+project/
 └── logs/
-    ├── alfredpy.log    # 完整运行日志
+    ├── mif_qt.log      # Qt GUI 主日志
+    ├── mif.log         # 兼容旧日志
     └── errors.log      # 错误日志
 ```
 
@@ -15,23 +16,23 @@ alfredpy/
 # 交互式查看
 ./view_logs.sh
 
-# 实时跟踪
-tail -f logs/alfredpy.log
+# 实时跟踪 Qt GUI 日志
+tail -f logs/mif_qt.log
 
 # 查看错误
 cat logs/errors.log
 
 # 查看最近 100 行
-tail -100 logs/alfredpy.log
+tail -100 logs/mif_qt.log
 ```
 
 ## 日志级别
 
 | 级别 | 说明 | 输出位置 |
 |------|------|---------|
-| DEBUG | 调试信息 | alfredpy.log |
-| INFO | 运行信息 | alfredpy.log |
-| ERROR | 错误信息 | alfredpy.log + errors.log |
+| DEBUG | 调试信息 | mif_qt.log |
+| INFO | 运行信息 | mif_qt.log |
+| ERROR | 错误信息 | mif_qt.log + errors.log |
 
 ## 故障排查
 

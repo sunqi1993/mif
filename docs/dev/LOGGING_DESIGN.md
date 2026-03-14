@@ -13,13 +13,14 @@
 
 ```
 logs/
-├── alfredpy.log    # 完整日志
+├── mif_qt.log      # Qt GUI 日志
+├── mif.log         # 兼容旧日志
 └── errors.log      # 错误日志
 ```
 
 ### 日志格式
 
-**alfredpy.log**:
+**mif_qt.log**:
 ```
 2026-03-14 14:39:00 - AlfredPy - INFO - 消息内容
 ```
@@ -45,7 +46,7 @@ logger = logging.getLogger("AlfredPy")
 logger.setLevel(logging.DEBUG)
 
 # 文件处理器 - DEBUG 级别
-file_handler = logging.FileHandler("logs/alfredpy.log")
+file_handler = logging.FileHandler("logs/mif_qt.log")
 file_handler.setLevel(logging.DEBUG)
 
 # 控制台处理器 - ERROR 级别

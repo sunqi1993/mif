@@ -33,11 +33,6 @@ if [[ -z "${PYTHON_BIN:-}" ]]; then
   exit 1
 fi
 
-if ! "$PYTHON_BIN" -c "import PySide6" >/dev/null 2>&1; then
-  echo "❌ 缺少 PySide6，请先安装："
-  echo "   uv pip install -e '.[qt]'"
-  echo "   或 pip install PySide6>=6.5.0"
-  exit 1
-fi
+# uv pip install -e .
 
-exec "$PYTHON_BIN" -m mif --gui "$@"
+exec uv run mif --gui "$@"

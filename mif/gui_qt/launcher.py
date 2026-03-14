@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 import re
+import signal
 import socket
 import sys
 import threading
@@ -38,6 +39,31 @@ logger = setup_file_logger("AlfredPy-QtWidgets", "mif_qt.log", level=logging.DEB
 _AT_RE = re.compile(r"^@(\w*)(?:\s+(.*))?$", re.DOTALL)
 _show_callback: list = [None]
 
+# Helper for thread-safe Qt calls
+_qt_app_ref: list = [None]
+
+def _safe_qt_call(func):
+    """Execute a function in the main Qt thread."""
+    from PySide6.QtCore import QThread, QTimer
+    from PySide6.QtWidgets import QApplication
+    
+    app = QApplication.instance()
+    if app is None:
+        # QApplication not created yet, call directly
+        # This should only happen during initialization
+        return func()
+    
+    # Store app reference for future use
+    if _qt_app_ref[0] is None:
+        _qt_app_ref[0] = app
+    
+    # Check if we're already in the main thread
+    if QThread.currentThread() is app.thread():
+        # Already in main thread, execute directly
+        return func()
+    
+    # Schedule the call in the main thread
+    QTimer.singleShot(0, func)
 
 def _parse_at(query: str) -> Tuple[Optional[str], str]:
     m = _AT_RE.match(query.strip())
@@ -68,6 +94,11 @@ def _claim_socket_and_start_listener() -> bool:
     try:
         sock.bind(path)
         sock.listen(1)
+        # Set secure permissions: owner read/write only
+        try:
+            os.chmod(path, 0o600)
+        except OSError as e:
+            logger.warning("Failed to set socket permissions: %s", e)
         sock.settimeout(1.0)
     except OSError:
         try:
@@ -83,7 +114,7 @@ def _claim_socket_and_start_listener() -> bool:
                 try:
                     data = conn.recv(64)
                     if data and data.strip() == cmd and _show_callback[0]:
-                        _show_callback[0]()
+                        _safe_qt_call(lambda: _show_callback[0]())
                 finally:
                     conn.close()
             except socket.timeout:
@@ -574,8 +605,9 @@ class SystemTray:
             self._on_show()
 
     def show_message(self, title: str, message: str) -> None:
-        self._tray_icon.showMessage(title, message, QSystemTrayIcon.Information, 2000)
-
+        # Ensure this runs in the main thread
+        _safe_qt_call(lambda: self._tray_icon.showMessage(
+            title, message, QSystemTrayIcon.Information, 2000))
 
 class GlobalHotkey:
     def __init__(self, hotkey: str, on_triggered):
@@ -606,7 +638,7 @@ class GlobalHotkey:
             def on_press(key):
                 current.add(key)
                 if all(k in current for k in keys):
-                    self._on_triggered()
+                    _safe_qt_call(lambda: self._on_triggered())
 
             def on_release(key):
                 current.discard(key)
@@ -646,6 +678,13 @@ def launch_gui(
     app.setApplicationName("AlfredPy")
     app.setOrganizationName("AlfredPy")
     app.setQuitOnLastWindowClosed(False)
+    _qt_app_ref[0] = app
+
+    # Make Ctrl+C work reliably while Qt event loop is running.
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    signal_pump = QTimer()
+    signal_pump.timeout.connect(lambda: None)
+    signal_pump.start(200)
 
     window = MainWindow(app_service)
 
