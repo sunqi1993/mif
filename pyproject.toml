@@ -1,0 +1,20 @@
+[project]
+name = "alfredpy"
+version = "0.1.0"
+description = "A lightweight Alfred-like launcher/workflow runner in Python."
+authors = [
+  { name = "Your Name", email = "you@example.com" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.9"
+
+[project.scripts]
+alfredpy = "alfredpy.main:main"
+
+[project.optional-dependencies]
+ui = ["prompt_toolkit>=3.0"]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
