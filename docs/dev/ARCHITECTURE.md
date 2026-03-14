@@ -1,6 +1,6 @@
-# AlfredPy 架构说明
+# mif 架构说明（当前）
 
-> 与 [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md) 互补：本文侧重结构与数据流，知识库侧重术语与速查。
+> 与 [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md) 互补：本文侧重分层与数据流。
 
 ---
 
@@ -8,100 +8,84 @@
 
 ```
 项目根/
-├── alfredpy/
-│   ├── __init__.py
-│   ├── __main__.py
-│   ├── main.py           # TUI/GUI 入口
-│   ├── config.py         # 配置路径与 workflow 加载
-│   ├── workflow.py       # WorkflowItem、ActionRegistry
-│   ├── gui/
-│   │   ├── launcher.py   # Flet 主界面，统一 PluginResult 处理
-│   │   └── hotkey.py     # 全局热键
+├── mif/
+│   ├── main.py                 # 统一 CLI 入口（--gui / --list / TUI）
+│   ├── config.py               # 配置路径与配置读写
+│   ├── workflow.py             # WorkflowItem、ActionRegistry
+│   ├── logging_setup.py        # 统一日志初始化
+│   ├── application/
+│   │   └── service.py          # UI 与插件系统之间的应用服务层
+│   ├── gui_qt/
+│   │   ├── launcher.py         # Qt Widgets GUI
+│   │   └── singleton.py        # GUI 单例唤起
 │   └── plugins/
-│       ├── base.py       # PluginMeta、PluginResult、BasePlugin、ConfigOption
-│       ├── __init__.py   # PluginManager
-│       ├── calc_plugin.py
-│       ├── workflow_plugin.py   # 将 workflows.json 转为插件结果
-│       ├── settings_plugin.py   # @settings 配置管理
-│       └── chrome_bookmarks_plugin.py
-├── config/               # 项目级配置（优先）
-│   ├── workflows.json
-│   ├── plugin_configs.json
-│   └── chrome_bookmarks_clicks.json
-├── docs/
-│   ├── user/
-│   └── dev/
+│       ├── base.py             # PluginMeta、PluginResult、BasePlugin
+│       ├── registry.py         # 插件发现/注册
+│       ├── config_store.py     # 插件配置持久化
+│       ├── coordinator.py      # 搜索聚合与 @ 路由
+│       ├── __init__.py         # PluginManager facade（兼容外部 API）
+│       └── *_plugin.py         # 内置插件实现
+├── config/                     # 项目级配置（存在时优先）
 ├── tests/
-├── run.sh
-└── workflows.json        # 遗留，仍参与路径优先级
+├── run.sh                      # GUI 快速入口（代理到 `python -m mif --gui`）
+└── view_logs.sh
 ```
 
 ---
 
-## 2. 配置目录优先级
+## 2. 分层与边界
 
-- **有效配置目录**：`config/` 存在则用项目下 `config/`，否则用 `~/.alfredpy/`。
-- 工作流：`load_config()` 依次查找 `config/workflows.json`、根目录 `workflows.json`、`~/.alfredpy/workflows.json`。
-- 插件配置与 Chrome 点击数据：均放在「有效配置目录」下对应 JSON 文件。
+- **UI 层**：`mif/gui_qt/launcher.py`
+  - 负责交互、样式、窗口生命周期
+  - 通过 `ApplicationService` 获取结果与执行动作
+- **应用层**：`mif/application/service.py`
+  - 负责将插件结果转换为 UI 可消费的结构
+  - 统一执行消息格式（成功/失败提示）
+- **领域层（插件系统）**：`mif/plugins/*`
+  - `PluginManager` 保持外观 API 稳定
+  - 内部分工为注册/配置/路由
+- **基础设施层**：`mif/config.py`、`mif/logging_setup.py`
+  - 配置路径策略、日志落盘策略
 
 ---
 
-## 3. 数据流（当前设计）
+## 3. 主数据流
 
 ```
 用户输入
-    │
-    ├─ 匹配 "@关键词" ──→ 解析 (at_kw, rest)
-    │                        │
-    │                        ├─ at_kw 为空 → 列出所有 @-插件
-    │                        └─ at_kw 有值 → PluginManager.search_at(at_kw, rest)
-    │                                            │
-    │                                            └─→ 单插件结果 + AtModeBanner（可含配置面板）
-    │
-    └─ 普通输入 ──→ PluginManager.search(query)
-                         │
-                         ├─ WorkflowPlugin  → 来自 workflows.json，模糊+关键词
-                         ├─ CalcPlugin      → 表达式求值（可置顶 CalcPanel）
-                         ├─ ChromeBookmarksPlugin → 书签 + 点击率排序
-                         ├─ SettingsPlugin  → match_keyword 恒为 False，不参与
-                         └─ 其他插件
-                         │
-                         └─→ 合并为 List[PluginResult]，按 score 排序
-                                    │
-                                    └─→ launcher 统一用 make_result_handler(result)
-                                             执行 plugin.execute(result)，必要时关窗
+  -> GUI（launcher）
+  -> ApplicationService
+  -> PluginManager facade
+      -> PluginSearchCoordinator
+      -> BasePlugin.search()/execute()
+  -> ApplicationService 转换为 UiEntry
+  -> GUI 渲染并执行反馈
+```
+
+`@` 模式路径：
+```
+GUI 解析 @keyword -> ApplicationService.find_at_plugin/search_at
 ```
 
 ---
 
-## 4. 插件与工作流的边界
+## 4. 配置优先级
 
-| 维度 | Workflow（JSON） | Plugin（Python） |
-|------|------------------|------------------|
-| 定义 | workflows.json，静态条目 | 代码，BasePlugin 子类 |
-| 结果 | 由 WorkflowPlugin 转成 PluginResult | 直接返回 List[PluginResult] |
-| 参数 | args 固定，支持 `{query}` 占位 | 可任意逻辑、可配置 |
-| 适用 | 简单动作、团队可编辑 JSON | 动态搜索、复杂逻辑、需状态/配置 |
-
-工作流通过 **WorkflowPlugin** 接入统一搜索与执行路径，GUI 不区分来源，只认 PluginResult。
+- 生效目录：`<project>/config`（存在时）优先，否则 `~/.mif`
+- 工作流文件：
+  1. `<project>/config/workflows.json`
+  2. `<project>/workflows.json`（兼容）
+  3. `~/.mif/workflows.json`
+- 插件配置：`plugin_configs.json` 位于生效目录
 
 ---
 
-## 5. 核心模块职责
+## 5. 入口与运行
 
-- **config.py**：解析有效配置目录、workflow/plugin 配置文件路径，提供 `load_config()`。
-- **workflow.py**：WorkflowItem 数据结构与 `run(query)` 的 `{query}` 替换；ActionRegistry 注册与执行。
-- **plugins/base.py**：插件契约（meta、result、config_options、match/strip/execute）。
-- **plugins/__init__.py**：插件发现、配置读写、`search`/`search_at` 路由。
-- **gui/launcher.py**：Flet 页面、输入解析、@-mode 与普通搜索、统一结果渲染与执行（含 CalcPanel、AtModeBanner 等）。
+- 标准入口：`python -m mif`
+- GUI：`python -m mif --gui`
+- 快速脚本：`./run.sh`（内部转发到 `python -m mif --gui`）
 
 ---
 
-## 6. 测试与入口
-
-- 测试：`pytest`，见 `tests/`。
-- 启动：`./run.sh`（gui/tui/hotkey/list），或 `python -m alfredpy`。
-
----
-
-**最后更新**：2026-03-14
+**最后更新**：2026-03-15

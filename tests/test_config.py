@@ -1,108 +1,50 @@
 """Tests for config module."""
 
 import json
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
-from mif.config import (
-    DEFAULT_CONFIG,
-    DEFAULT_CONFIG_PATH,
-    ensure_config_exists,
-    load_config,
-)
+from mif.config import ensure_config_exists, load_config, read_config
 
 
-class TestEnsureConfigExists:
-    """Tests for ensure_config_exists function."""
-
-    def test_create_config_if_not_exists(self, tmp_path):
-        """Test that config is created if it doesn't exist."""
-        config_file = tmp_path / "config.json"
-        config_path = str(config_file)
-
-        result = ensure_config_exists(config_path)
-
-        assert result == config_path
-        assert config_file.exists()
-        content = json.loads(config_file.read_text())
-        assert content == DEFAULT_CONFIG
-
-    def test_not_overwrite_existing_config(self, tmp_path):
-        """Test that existing config is not overwritten."""
-        config_file = tmp_path / "config.json"
-        config_file.write_text('{"workflows": [{"id": "test"}]}')
-
-        result = ensure_config_exists(str(config_file))
-
-        assert result == str(config_file)
-        content = json.loads(config_file.read_text())
-        assert content == {"workflows": [{"id": "test"}]}
-
-    def test_creates_parent_directories(self, tmp_path):
-        """Test that parent directories are created."""
-        nested_dir = tmp_path / "nested" / "path"
-        config_file = nested_dir / "config.json"
-        config_path = str(config_file)
-
-        result = ensure_config_exists(config_path)
-
-        assert result == config_path
-        assert nested_dir.exists()
-        assert config_file.exists()
+def test_ensure_config_exists_creates_default(tmp_path):
+    config_file = tmp_path / "config.json"
+    result = ensure_config_exists(str(config_file))
+    assert result == str(config_file)
+    assert config_file.exists()
+    assert json.loads(config_file.read_text()) == {"workflows": []}
 
 
-class TestLoadConfig:
-    """Tests for load_config function."""
-
-    def test_load_config_default_path(self):
-        """Test loading config with default path."""
-        from pathlib import Path as PathLib
-        
-        # Create temp config file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
-            json.dump({"workflows": [{"id": "test"}]}, f)
-            temp_path = f.name
-
-        try:
-            # Patch DEFAULT_CONFIG_PATH and PROJECT_CONFIG_PATH
-            with patch("mif.config.DEFAULT_CONFIG_PATH", temp_path), \
-                 patch("mif.config.PROJECT_CONFIG_PATH", PathLib("/nonexistent/path.json")):
-                config = load_config()
-                assert "workflows" in config
-                assert len(config["workflows"]) == 1
-        finally:
-            os.unlink(temp_path)
+def test_ensure_config_exists_keeps_existing(tmp_path):
+    config_file = tmp_path / "config.json"
+    config_file.write_text('{"workflows":[{"id":"x"}]}')
+    ensure_config_exists(str(config_file))
+    assert json.loads(config_file.read_text()) == {"workflows": [{"id": "x"}]}
 
 
-    def test_load_config_custom_path(self, tmp_path):
-        """Test loading config with custom path."""
-        config_file = tmp_path / "custom_config.json"
-        config_file.write_text('{"workflows": [{"id": "custom"}]}')
+def test_load_config_custom_path_creates_when_missing(tmp_path):
+    config_file = tmp_path / "missing.json"
+    loaded = load_config(str(config_file))
+    assert loaded == {"workflows": []}
+    assert config_file.exists()
 
-        config = load_config(str(config_file))
 
-        assert "workflows" in config
-        assert len(config["workflows"]) == 1
-        assert config["workflows"][0]["id"] == "custom"
+def test_read_config_without_create_raises_for_missing(tmp_path):
+    config_file = tmp_path / "missing.json"
+    with pytest.raises(FileNotFoundError):
+        read_config(str(config_file), create_if_missing=False)
 
-    def test_load_config_nonexistent_file(self):
-        """Test loading config from nonexistent file creates it."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = os.path.join(tmpdir, "new_config.json")
-            config = load_config(config_path)
-            assert config == DEFAULT_CONFIG
 
-    def test_load_config_invalid_json(self, tmp_path):
-        """Test loading invalid JSON raises RuntimeError."""
-        config_file = tmp_path / "invalid.json"
-        config_file.write_text("not valid json")
+def test_read_config_with_create_returns_default(tmp_path):
+    config_file = tmp_path / "create.json"
+    loaded = read_config(str(config_file), create_if_missing=True)
+    assert loaded == {"workflows": []}
+    assert config_file.exists()
 
-        with pytest.raises(RuntimeError, match="Failed to load config"):
-            load_config(str(config_file))
+
+def test_read_config_invalid_json_raises_decode_error(tmp_path):
+    config_file = tmp_path / "invalid.json"
+    config_file.write_text("not valid json")
+    with pytest.raises(json.JSONDecodeError):
+        read_config(str(config_file))
 

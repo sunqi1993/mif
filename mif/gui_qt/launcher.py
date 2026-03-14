@@ -9,10 +9,9 @@ import re
 import socket
 import sys
 import threading
-from pathlib import Path
 from typing import Any, Optional, Tuple
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -29,25 +28,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from mif.application import ApplicationService
 from mif.gui_qt import singleton
+from mif.logging_setup import setup_file_logger
 
-
-log_dir = Path(__file__).parent.parent.parent / "logs"
-log_dir.mkdir(exist_ok=True)
-
-logger = logging.getLogger("AlfredPy-QtWidgets")
-logger.setLevel(logging.DEBUG)
-
-_fh = logging.FileHandler(log_dir / "mif_qt.log", encoding="utf-8", mode="a")
-_fh.setLevel(logging.DEBUG)
-_fh.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-)
-if not logger.handlers:
-    logger.addHandler(_fh)
+logger = setup_file_logger("AlfredPy-QtWidgets", "mif_qt.log", level=logging.DEBUG)
 
 
 _AT_RE = re.compile(r"^@(\w*)(?:\s+(.*))?$", re.DOTALL)
@@ -117,14 +102,18 @@ class ResultRowWidget(QFrame):
 
     def __init__(self, icon: str, title: str, subtitle: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
+        self.setFrameShape(QFrame.NoFrame)
+        self.setLineWidth(0)
         self._icon_label = QLabel(icon, self)
         self._title_label = QLabel(title, self)
         self._subtitle_label = QLabel(subtitle, self)
 
         self._title_label.setWordWrap(False)
         self._subtitle_label.setWordWrap(False)
-        self._title_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._subtitle_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        # 让鼠标事件交给 QListWidget 处理，避免“点击无效”
+        self._icon_label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._title_label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._subtitle_label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
 
         text_layout = QVBoxLayout()
         text_layout.setContentsMargins(0, 0, 0, 0)
@@ -151,18 +140,22 @@ class ResultRowWidget(QFrame):
                     border: 1px solid rgba(143, 185, 255, 0.65);
                     border-radius: 10px;
                 }
-                QLabel { background: transparent; }
-                QLabel:first-child {
-                    color: rgba(255, 255, 255, 0.98);
-                    font-size: 20px;
+                QLabel {
+                    background: transparent;
+                    border: none;
+                    padding: 0;
+                    margin: 0;
                 }
                 """
             )
             self._title_label.setStyleSheet(
-                "color: rgba(255,255,255,0.99); font-size: 16px; font-weight: 700;"
+                "color: rgba(255,255,255,0.99); font-size: 16px; font-weight: 700; border: none; background: transparent;"
             )
             self._subtitle_label.setStyleSheet(
-                "color: rgba(230,240,255,0.95); font-size: 13px; font-weight: 500;"
+                "color: rgba(230,240,255,0.95); font-size: 13px; font-weight: 500; border: none; background: transparent;"
+            )
+            self._icon_label.setStyleSheet(
+                "color: rgba(255,255,255,0.98); font-size: 20px; border: none; background: transparent;"
             )
         else:
             self.setStyleSheet(
@@ -172,31 +165,38 @@ class ResultRowWidget(QFrame):
                     border: 1px solid rgba(255, 255, 255, 0.04);
                     border-radius: 10px;
                 }
-                QLabel { background: transparent; }
-                QLabel:first-child {
-                    color: rgba(255, 255, 255, 0.90);
-                    font-size: 20px;
+                QLabel {
+                    background: transparent;
+                    border: none;
+                    padding: 0;
+                    margin: 0;
                 }
                 """
             )
             self._title_label.setStyleSheet(
-                "color: rgba(245,248,255,0.94); font-size: 16px; font-weight: 600;"
+                "color: rgba(245,248,255,0.94); font-size: 16px; font-weight: 600; border: none; background: transparent;"
             )
             self._subtitle_label.setStyleSheet(
-                "color: rgba(196,207,230,0.78); font-size: 13px; font-weight: 450;"
+                "color: rgba(196,207,230,0.78); font-size: 13px; font-weight: 450; border: none; background: transparent;"
+            )
+            self._icon_label.setStyleSheet(
+                "color: rgba(255,255,255,0.90); font-size: 20px; border: none; background: transparent;"
             )
 
 
 class MainWindow(QWidget):
     """主窗口：QLineEdit + QListWidget 的稳定布局。"""
 
-    def __init__(self, plugin_manager):
+    def __init__(self, app_service: ApplicationService):
         super().__init__()
-        self._plugin_manager = plugin_manager
+        self._app_service = app_service
         self._entries: list[Any] = []
         self._row_widgets: list[ResultRowWidget] = []
         self._tray: Optional[SystemTray] = None
         self._is_at_mode = False
+        self._banner_timer = QTimer(self)
+        self._banner_timer.setSingleShot(True)
+        self._banner_timer.timeout.connect(self._hide_exec_banner)
 
         self.setWindowTitle("AlfredPy")
         self.resize(820, 640)
@@ -250,11 +250,18 @@ class MainWindow(QWidget):
         self.hint_label.setAlignment(Qt.AlignCenter)
         root.addWidget(self.hint_label)
 
+        self.exec_banner = QLabel("", self)
+        self.exec_banner.setAlignment(Qt.AlignCenter)
+        self.exec_banner.setVisible(False)
+        self.exec_banner.setFixedHeight(28)
+        root.addWidget(self.exec_banner)
+
         self._apply_styles()
 
     def _bind_events(self) -> None:
         self.search_input.textChanged.connect(self.refresh_results)
         self.search_input.returnPressed.connect(self.execute_current)
+        self.list_widget.itemClicked.connect(lambda _: self.execute_current())
         self.list_widget.itemDoubleClicked.connect(lambda _: self.execute_current())
         self.list_widget.itemSelectionChanged.connect(self._on_selection_changed)
         self.at_exit_btn.clicked.connect(self.exit_at_mode)
@@ -325,6 +332,15 @@ class MainWindow(QWidget):
         self.hint_label.setStyleSheet("color: rgba(180, 192, 214, 0.72); font-size: 15px;")
         self.at_banner_title.setStyleSheet("color: rgba(255, 221, 160, 0.98); font-size: 14px; font-weight: 700;")
         self.at_banner_hint.setStyleSheet("color: rgba(240, 224, 190, 0.78); font-size: 12px;")
+        self.exec_banner.setStyleSheet(
+            "background: rgba(34, 180, 98, 0.92);"
+            "color: rgba(245, 255, 249, 0.98);"
+            "border: 1px solid rgba(122, 245, 172, 0.82);"
+            "border-radius: 8px;"
+            "font-size: 13px;"
+            "font-weight: 700;"
+            "padding: 0 10px;"
+        )
 
     def refresh_results(self, text: str) -> None:
         q = text.strip()
@@ -347,97 +363,53 @@ class MainWindow(QWidget):
             self.list_widget.setCurrentRow(0)
 
     def _populate_normal_mode(self, q: str) -> None:
-        all_results = self._plugin_manager.search(q)
-        calc_result = None
-        others = []
-        for r in all_results:
-            if r.plugin_id == "calculator" and calc_result is None:
-                calc_result = r
-            else:
-                others.append(r)
-
-        if calc_result is not None:
-            self._append_entry(
-                title=calc_result.title,
-                subtitle=calc_result.subtitle,
-                icon=calc_result.icon or "🧮",
-                payload=calc_result,
-            )
-
-        for result in others[:40]:
-            plugin = self._plugin_manager.plugins.get(result.plugin_id)
-            icon = result.icon or (plugin.meta.icon if plugin else "🔌")
+        for result in self._app_service.search_normal(q):
             self._append_entry(
                 title=result.title,
                 subtitle=result.subtitle,
-                icon=icon,
-                payload=result,
+                icon=result.icon,
+                payload=result.payload,
             )
 
     def _populate_at_mode(self, at_kw: str, rest: str) -> None:
         if at_kw == "":
             self._set_banner(None)
-            self._show_at_listing("")
+            self._show_at_listing(partial="")
             return
 
-        plugin = self._plugin_manager.find_by_at_keyword(at_kw)
+        plugin = self._app_service.find_at_plugin(at_kw)
         if plugin is None:
             self._set_banner(None)
             self._show_at_listing(at_kw)
             return
 
-        self._set_banner(
-            {
-                "icon": plugin.meta.icon,
-                "title": f"@{plugin.meta.at_keyword} - {plugin.meta.name}",
-                "hint": plugin.meta.description,
-            }
-        )
+        self._set_banner(self._app_service.banner_for_plugin(plugin))
 
         if not rest:
-            if plugin.meta.config_options:
-                for opt in plugin.meta.config_options:
-                    type_hint = {
-                        "choice": f"可选: {' / '.join(opt.choices)}",
-                        "bool": "true / false",
-                        "int": "整数",
-                        "float": "小数",
-                    }.get(opt.type, "")
-                    self._append_entry(
-                        title=f"配置: {opt.name}",
-                        subtitle=f"{opt.description}  当前值={plugin.get_config(opt.key)}  {type_hint}".strip(),
-                        icon="⚙️",
-                        payload=None,
-                    )
-            else:
+            for entry in self._app_service.plugin_config_entries(plugin):
                 self._append_entry(
-                    title=f"@{plugin.meta.at_keyword} 已就绪",
-                    subtitle="继续输入参数以搜索",
-                    icon=plugin.meta.icon,
-                    payload=None,
+                    title=entry.title,
+                    subtitle=entry.subtitle,
+                    icon=entry.icon,
+                    payload=entry.payload,
                 )
             return
 
-        for result in self._plugin_manager.search_at(at_kw, rest):
+        for result in self._app_service.search_at(at_kw, rest, plugin=plugin):
             self._append_entry(
                 title=result.title,
                 subtitle=result.subtitle,
-                icon=result.icon or plugin.meta.icon,
-                payload=result,
+                icon=result.icon,
+                payload=result.payload,
             )
 
     def _show_at_listing(self, partial: str) -> None:
-        matched = [
-            p
-            for p in self._plugin_manager.all_at_plugins()
-            if not partial or p.meta.at_keyword.lower().startswith(partial.lower())
-        ]
-        for plugin in matched:
+        for plugin in self._app_service.list_at_plugins(partial):
             self._append_entry(
-                title=f"@{plugin.meta.at_keyword}  {plugin.meta.name}",
-                subtitle=plugin.meta.description,
-                icon=plugin.meta.icon,
-                payload=("at_select", plugin.meta.at_keyword),
+                title=plugin.title,
+                subtitle=plugin.subtitle,
+                icon=plugin.icon,
+                payload=plugin.payload,
             )
 
     def _append_entry(self, title: str, subtitle: str, icon: str, payload: Any) -> None:
@@ -477,16 +449,17 @@ class MainWindow(QWidget):
             return
 
         try:
-            plugin = self._plugin_manager.plugins.get(payload.plugin_id)
-            if plugin:
-                plugin.execute(payload)
-                if self._tray:
-                    self._tray.show_message("AlfredPy", f"已执行: {payload.title}")
-            logger.debug("execute result: plugin=%s title=%s", payload.plugin_id, payload.title)
+            ok, message = self._app_service.execute(payload)
+            if ok and self._tray:
+                self._tray.show_message("AlfredPy", message)
+            self._flash_exec_banner(message, is_error=not ok)
+            if hasattr(payload, "plugin_id") and hasattr(payload, "title"):
+                logger.debug("execute result: plugin=%s title=%s", payload.plugin_id, payload.title)
         except Exception as ex:
             logger.error("执行失败: %s", ex, exc_info=True)
             if self._tray:
                 self._tray.show_message("AlfredPy", f"执行失败: {ex}")
+            self._flash_exec_banner(f"执行失败: {ex}", is_error=True)
 
     def exit_at_mode(self) -> None:
         self.search_input.clear()
@@ -526,6 +499,34 @@ class MainWindow(QWidget):
         self.raise_()
         self.activateWindow()
         self.search_input.setFocus()
+
+    def _flash_exec_banner(self, text: str, is_error: bool = False) -> None:
+        if is_error:
+            self.exec_banner.setStyleSheet(
+                "background: rgba(200, 62, 62, 0.92);"
+                "color: rgba(255, 246, 246, 0.98);"
+                "border: 1px solid rgba(255, 160, 160, 0.82);"
+                "border-radius: 8px;"
+                "font-size: 13px;"
+                "font-weight: 700;"
+                "padding: 0 10px;"
+            )
+        else:
+            self.exec_banner.setStyleSheet(
+                "background: rgba(34, 180, 98, 0.92);"
+                "color: rgba(245, 255, 249, 0.98);"
+                "border: 1px solid rgba(122, 245, 172, 0.82);"
+                "border-radius: 8px;"
+                "font-size: 13px;"
+                "font-weight: 700;"
+                "padding: 0 10px;"
+            )
+        self.exec_banner.setText(text)
+        self.exec_banner.setVisible(True)
+        self._banner_timer.start(5000)
+
+    def _hide_exec_banner(self) -> None:
+        self.exec_banner.setVisible(False)
 
 
 class SystemTray:
@@ -639,13 +640,14 @@ def launch_gui(
 
     plugin_manager = PluginManager()
     logger.info("已加载插件：%s", list(plugin_manager.plugins.keys()))
+    app_service = ApplicationService(plugin_manager)
 
     app = QApplication([sys.argv[0]])
     app.setApplicationName("AlfredPy")
     app.setOrganizationName("AlfredPy")
     app.setQuitOnLastWindowClosed(False)
 
-    window = MainWindow(plugin_manager)
+    window = MainWindow(app_service)
 
     def show_window():
         window.show_and_focus()

@@ -1,9 +1,9 @@
-# 🛠️ AlfredPy 开发文档
+# 🛠️ mif 开发文档
 
 ## 文档目录
 
 - [架构设计](ARCHITECTURE.md) - 项目架构说明
-- [Flet 兼容性](FLET_COMPATIBILITY.md) - Flet API 适配
+- [Flet 兼容性（历史）](FLET_COMPATIBILITY.md) - 旧 UI 兼容记录
 - [日志设计](LOGGING_DESIGN.md) - 日志系统实现
 - [变更日志](CHANGELOG.md) - 版本更新记录
 
@@ -16,13 +16,13 @@
 
 ```bash
 # 安装依赖
-uv pip install -e ".[dev,gui]"
+uv pip install -e ".[all]"
 
 # 运行测试
 pytest
 
 # 查看覆盖率
-pytest --cov=alfredpy
+pytest --cov=mif
 ```
 
 ## 代码规范

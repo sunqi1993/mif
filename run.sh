@@ -7,10 +7,11 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"
 
 usage() {
-  echo "用法: ./run.sh [--no-tray] [--no-hotkey] [--hotkey <组合键>] [config_path]"
+  echo "用法: ./run.sh [--config <路径>] [--no-tray] [--no-hotkey] [--hotkey <组合键>]"
   echo "示例:"
   echo "  ./run.sh"
   echo "  ./run.sh --no-tray --no-hotkey"
+  echo "  ./run.sh --config ./workflows.json"
   echo "  ./run.sh --hotkey '<alt>+<space>'"
 }
 
@@ -39,4 +40,4 @@ if ! "$PYTHON_BIN" -c "import PySide6" >/dev/null 2>&1; then
   exit 1
 fi
 
-exec "$PYTHON_BIN" -m mif.gui_qt.launcher "$@"
+exec "$PYTHON_BIN" -m mif --gui "$@"

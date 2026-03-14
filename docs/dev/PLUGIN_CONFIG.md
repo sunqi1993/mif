@@ -24,7 +24,7 @@ AlfredPy 遵循 **"项目优先，用户兜底"** 的原则，在两个位置查
 | 优先级 | 路径 | 用途 |
 |--------|------|------|
 | **1（最高）** | `<项目根>/config/plugin_configs.json` | 团队/项目级别，随代码库版本管理 |
-| **2（兜底）** | `~/.alfredpy/plugin_configs.json` | 个人本地，不进入版本库 |
+| **2（兜底）** | `~/.mif/plugin_configs.json` | 个人本地，不进入版本库 |
 
 **读取规则**：优先读取项目 `config/` 目录；若该目录不存在，则退到用户目录。  
 **写入规则**：写回到*读取源*，保证写入和读取在同一个文件里。
@@ -35,7 +35,7 @@ AlfredPy 遵循 **"项目优先，用户兜底"** 的原则，在两个位置查
 |--------|------|
 | 1 | `<项目根>/config/workflows.json` |
 | 2 | `<项目根>/workflows.json`（遗留，向后兼容） |
-| 3 | `~/.alfredpy/workflows.json` |
+| 3 | `~/.mif/workflows.json` |
 
 ---
 
@@ -123,13 +123,13 @@ AlfredPy 遵循 **"项目优先，用户兜底"** 的原则，在两个位置查
 @settings calculator reset
 ```
 
-执行后，更改会**立即生效**并**自动写入** `config/plugin_configs.json`（项目 config 目录存在时）或 `~/.alfredpy/plugin_configs.json`（用户兜底目录）。
+执行后，更改会**立即生效**并**自动写入** `config/plugin_configs.json`（项目 config 目录存在时）或 `~/.mif/plugin_configs.json`（用户兜底目录）。
 
 ---
 
 ## 手动编辑 JSON 配置文件
 
-直接编辑 `config/plugin_configs.json`，**重启 AlfredPy 后生效**。
+直接编辑 `config/plugin_configs.json`，**重启 mif 后生效**。
 
 ```json
 {
@@ -148,13 +148,13 @@ AlfredPy 遵循 **"项目优先，用户兜底"** 的原则，在两个位置查
 ## Python API（代码中调用）
 
 ```python
-from alfredpy.plugins import PluginManager
-from alfredpy.config import (
+from mif.plugins import PluginManager
+from mif.config import (
     effective_config_dir,    # 当前生效的 config 目录
     plugin_config_path,      # plugin_configs.json 的绝对路径
     workflow_config_path,    # workflows.json 的绝对路径
     project_config_dir,      # <project>/config/ (若存在)
-    user_config_dir,         # ~/.alfredpy/
+    user_config_dir,         # ~/.mif/
 )
 
 pm = PluginManager()
@@ -179,7 +179,7 @@ pm.reset_plugin_config("calculator")
 
 # 查看配置文件路径
 print(pm.CONFIG_PATH)
-# → /path/to/project/config/plugin_configs.json  （或 ~/.alfredpy/...）
+# → /path/to/project/config/plugin_configs.json  （或 ~/.mif/...）
 ```
 
 ---
@@ -187,7 +187,7 @@ print(pm.CONFIG_PATH)
 ## 开发新插件时如何声明配置项
 
 ```python
-from alfredpy.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
+from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
 
 class MyPlugin(BasePlugin):
     def get_meta(self) -> PluginMeta:
@@ -244,7 +244,7 @@ PluginManager 初始化
     ┌───────────────────────────────────────┐
     │  1. <project>/config/ 目录存在？       │
     │     YES → 读 config/plugin_configs.json│
-    │     NO  → 读 ~/.alfredpy/plugin_...   │
+    │     NO  → 读 ~/.mif/plugin_...        │
     └───────────────────────────────────────┘
         │
         ▼

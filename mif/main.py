@@ -34,12 +34,19 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument("--config", "-c", help="Use a custom workflows config file")
     parser.add_argument("--list", "-l", action="store_true", help="List available workflows")
     parser.add_argument("--gui", "-g", action="store_true", help="Launch GUI mode")
+    parser.add_argument("--no-tray", action="store_true", help="Disable system tray in GUI mode")
+    parser.add_argument("--no-hotkey", action="store_true", help="Disable global hotkey in GUI mode")
+    parser.add_argument("--hotkey", default="<alt>+<space>", help="Custom global hotkey for GUI mode")
     args = parser.parse_args(argv)
 
     # GUI mode - launch Qt Widgets application
     if args.gui:
         from mif.gui_qt.launcher import launch_gui
-        launch_gui(args.config)
+        launch_gui(
+            config_path=args.config,
+            show_tray=not args.no_tray,
+            hotkey="" if args.no_hotkey else args.hotkey,
+        )
         return 0
 
     # TUI mode

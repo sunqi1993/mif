@@ -84,21 +84,22 @@ def load_config(path: str | None = None) -> Any:
       2. <project>/workflows.json  (legacy)
       3. ~/.mif/workflows.json
     """
-    if path is not None:
-        config_path = Path(path)
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-        if not config_path.exists():
-            config_path.write_text(
-                json.dumps(_DEFAULT_WORKFLOW_CONFIG, indent=2, ensure_ascii=False)
-            )
-    else:
-        config_path = workflow_config_path()
-        if not config_path.exists():
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            config_path.write_text(
-                json.dumps(_DEFAULT_WORKFLOW_CONFIG, indent=2, ensure_ascii=False)
-            )
+    return read_config(path=path, create_if_missing=True)
 
+
+def read_config(path: str | None = None, *, create_if_missing: bool = False) -> Any:
+    """Read workflow config.
+
+    Args:
+        path: Optional explicit config path.
+        create_if_missing: When True, create default config file if absent.
+    """
+    config_path = Path(path) if path is not None else workflow_config_path()
+    if create_if_missing and not config_path.exists():
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            json.dumps(_DEFAULT_WORKFLOW_CONFIG, indent=2, ensure_ascii=False)
+        )
     with open(config_path, encoding="utf-8") as f:
         return json.load(f)
 

@@ -6,20 +6,20 @@
 
 ```bash
 # 使用 UV（推荐）
-uv pip install -e ".[dev,gui]"
+uv pip install -e ".[all]"
 
 # 或使用 pip
-pip install -e ".[dev,gui]"
+pip install -e ".[all]"
 ```
 
 ### 2. 启动
 
 ```bash
 # GUI 模式（图形界面）
-./run.sh gui
+./run.sh
 
-# 或
-python start_gui.py
+# 可选参数
+./run.sh --no-tray --no-hotkey
 ```
 
 ### 3. 使用
@@ -29,19 +29,19 @@ python start_gui.py
 3. 按 Enter 执行
 4. 按 Esc 关闭
 
-## 5 种启动方式
+## 4 种启动方式
 
 | 方式 | 命令 | 说明 |
 |------|------|------|
-| GUI | `./run.sh gui` | 图形界面（推荐） |
-| TUI | `./run.sh tui` | 终端界面 |
-| 热键 | `./run.sh hotkey &` | Alt+Space 唤醒 |
-| 列表 | `./run.sh list` | 查看工作流 |
+| GUI | `./run.sh` | 图形界面（推荐） |
+| GUI(统一入口) | `python -m mif --gui` | 图形界面 |
+| TUI | `python -m mif` | 终端界面 |
+| 列表 | `python -m mif --list` | 查看工作流 |
 | 帮助 | `./run.sh --help` | 显示帮助 |
 
 ## 配置工作流
 
-编辑 `~/.alfredpy/workflows.json`:
+编辑 `~/.mif/workflows.json`:
 
 ```json
 [
@@ -80,15 +80,15 @@ python start_gui.py
 ./view_logs.sh
 
 # 或
-tail -f logs/alfredpy.log
+tail -f logs/mif_qt.log
 ```
 
 ## 常见问题
 
 ### GUI 无法启动？
 ```bash
-# 检查依赖
-./run.sh -i
+# 安装 Qt 依赖
+uv pip install -e ".[qt]"
 ```
 
 ### 热键不工作？
@@ -97,7 +97,7 @@ tail -f logs/alfredpy.log
 - **Windows**: 以管理员身份运行
 
 ### 找不到工作流？
-确保 `~/.alfredpy/workflows.json` 存在
+确保 `~/.mif/workflows.json` 存在
 
 ## 更多文档
 

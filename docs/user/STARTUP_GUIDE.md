@@ -6,26 +6,25 @@
 
 ```bash
 ./run.sh                    # GUI 模式
-./run.sh gui                # 同上
-./run.sh tui                # 终端模式
-./run.sh hotkey             # 热键监听
-./run.sh list               # 列出工作流
+./run.sh --no-tray          # 关闭托盘
+./run.sh --no-hotkey        # 关闭全局热键
+./run.sh --hotkey "<alt>+<space>"
 ./run.sh --help             # 显示帮助
 ```
 
-### 2. Python 脚本
+### 2. Python 命令
 
 ```bash
-python start_gui.py         # GUI
-python start_hotkey.py      # 热键
+python -m mif --gui         # GUI
+python -m mif               # TUI
+python -m mif --list        # 列出工作流
 ```
 
-### 3. 直接命令
+### 3. 脚本入口（安装后）
 
 ```bash
-alfredpy --gui              # GUI
-alfredpy                    # TUI
-python -m alfredpy --gui    # 开发模式
+mif --gui                   # GUI
+mif                         # TUI
 ```
 
 ### 4. 桌面快捷方式
@@ -38,18 +37,14 @@ python -m alfredpy --gui    # 开发模式
 | 参数 | 说明 |
 |------|------|
 | `-c, --config` | 指定配置文件 |
-| `-i, --install` | 安装依赖 |
+| `--no-tray` | GUI 模式下禁用托盘 |
+| `--no-hotkey` | GUI 模式下禁用全局热键 |
+| `--hotkey` | 自定义 GUI 全局热键 |
 | `-h, --help` | 显示帮助 |
 
 ## 示例
 
 ```bash
 # 使用自定义配置
-./run.sh -c ~/workflows.json gui
-
-# 安装依赖
-./run.sh -i
-
-# 热键常驻后台
-./run.sh hotkey &
+./run.sh --config ~/workflows.json
 ```
