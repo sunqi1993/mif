@@ -17,12 +17,14 @@ dependencies = [
 [project.optional-dependencies]
 search = ["thefuzz>=0.19.0"]
 clipboard = ["pyperclip>=1.8.0"]
+menubar = ["pyobjc-framework-Cocoa>=10.0"]
 all = [
     "prompt_toolkit>=3.0",
     "flet>=0.21.0",
     "pynput>=1.7.6",
     "thefuzz>=0.19.0",
     "pyperclip>=1.8.0",
+    "pyobjc-framework-Cocoa>=10.0",
 ]
 [project.scripts]
 alfredpy = "alfredpy.main:main"

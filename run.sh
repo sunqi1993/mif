@@ -92,6 +92,7 @@ show_help() {
     echo ""
     echo "模式:"
     echo "  gui      启动图形界面 (默认)"
+    echo "  menubar  macOS 菜单栏托管，点击图标打开搜索 (仅 macOS)"
     echo "  tui      启动终端界面"
     echo "  hotkey   启动热键监听"
     echo "  list     列出工作流"
@@ -106,6 +107,7 @@ show_help() {
     echo "  ./run.sh                    # 启动 GUI"
     echo "  ./run.sh gui                # 启动 GUI"
     echo "  ./run.sh tui                # 启动 TUI"
+    echo "  ./run.sh menubar            # macOS 菜单栏托管"
     echo "  ./run.sh hotkey             # 启动热键监听"
     echo "  ./run.sh list               # 列出工作流"
     echo "  ./run.sh -c ~/workflows.json gui"
@@ -157,6 +159,24 @@ start_hotkey() {
     $PYTHON -m alfredpy.gui.hotkey
 }
 
+# 启动菜单栏托管 (仅 macOS)
+start_menubar() {
+    if [ "$(uname -s)" != "Darwin" ]; then
+        print_error "menubar 模式仅支持 macOS"
+        exit 1
+    fi
+    if ! $PYTHON -c "from AppKit import NSApplication" 2>/dev/null; then
+        print_warning "PyObjC Cocoa 未安装，正在安装菜单栏依赖..."
+        if command -v uv &> /dev/null; then
+            uv pip install "pyobjc-framework-Cocoa>=10.0"
+        else
+            pip3 install "pyobjc-framework-Cocoa>=10.0"
+        fi
+    fi
+    print_info "启动菜单栏 — 左键打开搜索（窗口不占 Dock），右键退出"
+    $PYTHON start_menubar.py
+}
+
 # 列出工作流
 list_workflows() {
     local config_arg=""
@@ -170,7 +190,7 @@ list_workflows() {
 # 主函数
 main() {
     # 解析参数
-    MODE="gui"
+    MODE="menubar"
     CONFIG_PATH=""
     INSTALL=false
     VERBOSE=false
@@ -199,6 +219,10 @@ main() {
                 ;;
             tui)
                 MODE="tui"
+                shift
+                ;;
+            menubar)
+                MODE="menubar"
                 shift
                 ;;
             hotkey)
@@ -237,6 +261,9 @@ main() {
             ;;
         tui)
             start_tui
+            ;;
+        menubar)
+            start_menubar
             ;;
         hotkey)
             start_hotkey

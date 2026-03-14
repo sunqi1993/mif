@@ -65,7 +65,9 @@ class WorkflowPlugin(BasePlugin):
             # Build subtitle: show substitution hint when {query} is used
             subtitle = wf.description or ""
             if "{query}" in str(wf.args.values()) and not subst:
-                subtitle = f"{'  ' + subtitle if subtitle else ''}  ← 输入关键词后触发".strip()
+                # 与插件一致：展示实际触发关键词（如 触发词: g, google）
+                kw_hint = " / ".join(wf.keywords) if wf.keywords else "关键词"
+                subtitle = f"{'  ' + subtitle if subtitle else ''}  ← 输入 {kw_hint} 后触发".strip()
 
             results.append(PluginResult(
                 title=wf.name,

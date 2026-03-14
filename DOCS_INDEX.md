@@ -16,7 +16,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [架构设计](docs/dev/ARCHITECTURE.md) | 项目架构说明 |
+| [知识库（上下文）](docs/dev/KNOWLEDGE_BASE.md) | 术语、配置与路径、插件/工作流、内置插件、GUI、代码位置（资料库/Agent 优先读） |
+| [架构设计](docs/dev/ARCHITECTURE.md) | 项目结构、配置优先级、数据流、插件与工作流边界 |
 | [插件配置系统](docs/dev/PLUGIN_CONFIG.md) | 配置文件位置、格式、@settings 命令、API 参考、新插件声明配置项 |
 | [Flet API 参考](docs/dev/FLET_COMPATIBILITY.md) | v0.82.2 组件参数完整列表、踩坑记录、常用模式速查（Agent 必读） |
 | [日志设计](docs/dev/LOGGING_DESIGN.md) | 日志系统实现 |
@@ -45,15 +46,17 @@ alfredpy/
 ├── DOCS_INDEX.md              # 本文档索引
 ├── config/                    # ⭐ 项目级配置（优先于 ~/.alfredpy/）
 │   ├── plugin_configs.json    #   插件参数 + 触发词覆盖
-│   └── workflows.json         #   工作流定义
+│   ├── workflows.json         #   工作流定义
+│   └── chrome_bookmarks_clicks.json  # Chrome 书签点击统计（排序用）
 ├── docs/
 │   ├── user/                  # 用户文档
 │   │   ├── QUICKSTART.md
 │   │   ├── STARTUP_GUIDE.md
 │   │   └── LOGGING_SYSTEM.md
 │   └── dev/                   # 开发文档
+│       ├── KNOWLEDGE_BASE.md  #   知识库 / 上下文（资料库用）
 │       ├── ARCHITECTURE.md
-│       ├── PLUGIN_CONFIG.md   #   插件配置系统（新）
+│       ├── PLUGIN_CONFIG.md
 │       ├── FLET_COMPATIBILITY.md
 │       └── LOGGING_DESIGN.md
 └── .opencode/

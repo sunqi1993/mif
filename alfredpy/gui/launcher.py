@@ -18,10 +18,15 @@ All results share one handler factory (make_result_handler), one UI component
 
 import flet as ft
 import logging
+import os
 import re
+import socket
 import sys
+import threading
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+from alfredpy.gui import singleton
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 log_dir = Path(__file__).parent.parent.parent / "logs"
@@ -93,10 +98,11 @@ class _SectionLabel(ft.Container):
                 controls=[
                     ft.Text(label, size=10, weight=ft.FontWeight.W_600,
                             color=ft.Colors.WHITE38),
-                    ft.Divider(height=1, color=_DIVIDER, thickness=1),
+                    ft.Divider(height=1, color=_DIVIDER, thickness=1, expand=True),
                 ],
                 spacing=8,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                expand=True,
             ),
             padding=ft.padding.only(left=15, right=15, top=8, bottom=2),
         )
@@ -127,6 +133,7 @@ class ResultItem(ft.Container):
                 ),
             ],
             spacing=10,
+            expand=True,
         )
         self.padding = ft.padding.symmetric(horizontal=15, vertical=11)
         self.bgcolor = ft.Colors.TRANSPARENT
@@ -212,6 +219,7 @@ class AtModeBanner(ft.Container):
                 ],
                 spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                expand=True,
             ),
             padding=ft.padding.symmetric(horizontal=15, vertical=10),
             bgcolor="#1a1200",
@@ -248,6 +256,7 @@ class AtPluginItem(ft.Container):
             ],
             spacing=10,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,
         )
         self.padding = ft.padding.symmetric(horizontal=15, vertical=11)
         self.bgcolor = ft.Colors.TRANSPARENT
@@ -283,6 +292,7 @@ class ConfigItem(ft.Container):
                 ],
                 spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                expand=True,
             ),
             padding=ft.padding.symmetric(horizontal=15, vertical=10),
             bgcolor=ft.Colors.TRANSPARENT,
@@ -290,10 +300,87 @@ class ConfigItem(ft.Container):
         )
 
 
+# ── 单例：先占 socket 再启动 Flet，避免多次点击起多个 GUI ────────────────────────
+
+# 由 main(page) 注入，listener 收到 show 时调用
+_show_callback: list = [None]
+
+
+def _claim_socket_and_start_listener() -> bool:
+    """立即绑定 socket 并启动监听线程；失败（已有实例）返回 False。"""
+    path = singleton.get_socket_path()
+    cmd = singleton.get_show_cmd()
+    # 若 path 已存在，先尝试连接：能连上说明已有实例，不抢
+    if os.path.exists(path):
+        try:
+            probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            probe.settimeout(0.3)
+            probe.connect(path)
+            probe.close()
+            return False
+        except (ConnectionRefusedError, socket.error, OSError):
+            pass
+        try:
+            os.unlink(path)
+        except OSError:
+            return False
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        sock.bind(path)
+        sock.listen(1)
+        sock.settimeout(1.0)
+    except OSError:
+        try:
+            sock.close()
+        except Exception:
+            pass
+        return False
+    except Exception as e:
+        logger.warning("单例 socket 绑定失败: %s", e)
+        try:
+            sock.close()
+        except Exception:
+            pass
+        return False
+
+    def loop():
+        while True:
+            try:
+                conn, _ = sock.accept()
+                try:
+                    data = conn.recv(64)
+                    if data and data.strip() == cmd and _show_callback[0]:
+                        try:
+                            _show_callback[0]()
+                        except Exception as ex:
+                            logger.debug("唤起窗口失败: %s", ex)
+                finally:
+                    conn.close()
+            except socket.timeout:
+                continue
+            except (OSError, BrokenPipeError, ConnectionResetError):
+                break
+            except Exception as e:
+                logger.debug("show listener: %s", e)
+
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+    return True
+
+
 # ── Main launcher ─────────────────────────────────────────────────────────────
 
 def launch_gui(config_path: Optional[str] = None):
-    """Launch the Flet GUI."""
+    """Launch the Flet GUI. 若已有实例在跑则只唤起窗口并返回（单例）。"""
+    if singleton.try_show_existing():
+        logger.info("已有 GUI 实例在运行，已发送唤起信号")
+        return
+    # 立即抢占 socket，再启动 Flet；避免 Flet 启动前被再次点击又起一个进程
+    if not _claim_socket_and_start_listener():
+        if singleton.try_show_existing():
+            logger.info("已有 GUI 实例在运行，已发送唤起信号")
+        return
+    # Dock 隐藏由 menubar 在子进程入口处（import 前）设置，此处不再重复
     logger.info(f"启动 GUI，配置参数：{config_path}")
 
     from alfredpy.plugins import PluginManager
@@ -532,7 +619,7 @@ def launch_gui(config_path: Optional[str] = None):
 
         page.on_keyboard_event = on_keyboard
 
-        # ── Search field ──────────────────────────────────────────────────────
+        # ── Search field（宽度随窗口拉伸）──────────────────────────────────────
         search_field = ft.TextField(
             hint_text="搜索…  1+2  g Python  @calc  @wf  @settings",
             hint_style=ft.TextStyle(color=ft.Colors.WHITE24, size=15),
@@ -548,19 +635,29 @@ def launch_gui(config_path: Optional[str] = None):
             on_change=on_change,
             on_submit=on_submit,
             prefix_icon=ft.Icons.SEARCH,
+            expand=True,
         )
 
         page.add(ft.Column(
             controls=[
-                ft.Container(content=search_field, bgcolor=_BG,
-                             padding=ft.padding.symmetric(horizontal=15, vertical=15)),
+                ft.Container(
+                    content=ft.Row(controls=[search_field], expand=True),
+                    bgcolor=_BG,
+                    padding=ft.padding.symmetric(horizontal=15, vertical=15),
+                ),
                 ft.Container(content=results_column, bgcolor=_BG, expand=True),
             ],
-            expand=True, spacing=0,
+            expand=True,
+            spacing=0,
         ))
 
         perform_search()
         search_field.focus()
+        # 注入「唤起窗口」回调，供单例 socket 监听线程使用
+        def _show_window():
+            page.window_visible = True
+            page.update()
+        _show_callback[0] = _show_window
         logger.info("✅ GUI 启动完成")
 
     try:
