@@ -31,7 +31,7 @@ NSEventMaskRightMouseUp = 1 << 4
 from Foundation import NSObject
 from objc import super
 
-from alfredpy.gui import singleton
+from mif.gui import singleton
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -40,7 +40,7 @@ def _launch_gui_subprocess() -> None:
     """若已有 GUI 在跑则只唤起；否则子进程启动 GUI。仅用于 run_menubar() 独立进程模式。"""
     if singleton.try_show_existing():
         return
-    cmd = [sys.executable, "-c", "from alfredpy.gui.launcher import launch_gui; launch_gui()"]
+    cmd = [sys.executable, "-c", "from mif.gui.launcher import launch_gui; launch_gui()"]
     subprocess.Popen(
         cmd,
         cwd=str(_PROJECT_ROOT),

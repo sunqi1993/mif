@@ -22,13 +22,13 @@ def main():
     except ImportError as e:
         print("❌ 未安装 PyObjC，请先安装菜单栏依赖：")
         print("   pip install pyobjc-framework-Cocoa")
-        print("   或  uv pip install 'alfredpy[menubar]'")
+        print("   或  uv pip install 'mif[menubar]'")
         print("   错误: %s" % e)
         return 1
 
     # 托盘独立进程（Flet 与 NSApplication 不同步，同进程托盘不显示）；GUI 子进程不占 Dock
     try:
-        from alfredpy.gui.menubar import run_menubar
+        from mif.gui.menubar import run_menubar
         run_menubar()
         return 0
     except Exception as e:

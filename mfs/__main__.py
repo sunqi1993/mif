@@ -1,4 +1,4 @@
-"""Enable running as a module: python -m alfredpy."""
+"""Enable running as a module: python -m mif."""
 
 from .main import main
 

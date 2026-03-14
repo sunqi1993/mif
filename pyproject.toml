@@ -1,5 +1,5 @@
 [project]
-name = "alfredpy"
+name = "mif"
 version = "0.1.0"
 description = "A lightweight Alfred-like launcher/workflow runner in Python."
 authors = [
@@ -27,11 +27,11 @@ all = [
     "pyobjc-framework-Cocoa>=10.0",
 ]
 [project.scripts]
-alfredpy = "alfredpy.main:main"
+mif = "mif.main:main"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["alfredpy"]
+packages = ["mif"]

@@ -22,10 +22,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from alfredpy.plugins.base import BasePlugin, PluginMeta, PluginResult
+from mif.plugins.base import BasePlugin, PluginMeta, PluginResult
 
 if TYPE_CHECKING:
-    from alfredpy.plugins import PluginManager
+    from mif.plugins import PluginManager
 
 
 class SettingsPlugin(BasePlugin):
@@ -48,7 +48,7 @@ class SettingsPlugin(BasePlugin):
             name="插件设置",
             description="配置插件的触发词、@关键词及参数  (@settings <plugin> <key> <value>)",
             version="1.0.0",
-            author="alfredpy",
+            author="mif",
             icon="⚙️",
             keywords=[],          # no prefix-keyword trigger (only via @settings)
             at_keyword="settings",

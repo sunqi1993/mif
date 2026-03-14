@@ -31,7 +31,7 @@ def main():
     
     try:
         # 启动 GUI
-        from alfredpy.gui.launcher import launch_gui
+        from mif.gui.launcher import launch_gui
         
         # 支持配置文件参数
         config_path = None

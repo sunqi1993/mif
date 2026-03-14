@@ -7,6 +7,7 @@ import webbrowser
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+from urllib.parse import quote
 
 # Try to import pyperclip for clipboard support
 try:
@@ -93,11 +94,13 @@ def action_print(args: dict) -> None:
 
 @ActionRegistry.register("open_url")
 def action_open_url(args: dict) -> None:
-    """Open a URL in the default browser."""
+    """Open a URL in the default browser. 非 ASCII 字符会按 UTF-8 做百分号编码，避免乱码。"""
     url = args.get("url")
     if not url:
         raise ValueError("`url` is required for open_url action")
-    webbrowser.open(url)
+    # 只传 ASCII URL，避免系统/浏览器对中文等字符误解释为 Latin-1 导致 ?q= 乱码
+    url_ascii = quote(url, safe="/?:@!$&'()*+,;=", encoding="utf-8")
+    webbrowser.open(url_ascii)
 
 
 @ActionRegistry.register("run")

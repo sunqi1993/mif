@@ -26,7 +26,7 @@ import threading
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from alfredpy.gui import singleton
+from mif.gui import singleton
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 log_dir = Path(__file__).parent.parent.parent / "logs"
@@ -35,7 +35,7 @@ log_dir.mkdir(exist_ok=True)
 logger = logging.getLogger("AlfredPy")
 logger.setLevel(logging.DEBUG)
 
-_fh = logging.FileHandler(log_dir / "alfredpy.log", encoding="utf-8", mode="a")
+_fh = logging.FileHandler(log_dir / "mif.log", encoding="utf-8", mode="a")
 _fh.setLevel(logging.DEBUG)
 _fh.setFormatter(logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -383,7 +383,7 @@ def launch_gui(config_path: Optional[str] = None):
     # Dock 隐藏由 menubar 在子进程入口处（import 前）设置，此处不再重复
     logger.info(f"启动 GUI，配置参数：{config_path}")
 
-    from alfredpy.plugins import PluginManager
+    from mif.plugins import PluginManager
     plugin_manager = PluginManager()
     logger.info(f"已加载插件：{list(plugin_manager.plugins.keys())}")
 

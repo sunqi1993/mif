@@ -1,4 +1,4 @@
-"""Command-line entrypoint for alfredpy."""
+"""Command-line entrypoint for mif."""
 
 import argparse
 import sys
@@ -8,8 +8,8 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion, ThreadedCompleter
 from prompt_toolkit.styles import Style
 
-from alfredpy.config import load_config
-from alfredpy.workflow import WorkflowItem
+from mif.config import load_config
+from mif.workflow import WorkflowItem
 
 
 class WorkflowCompleter(Completer):
@@ -30,7 +30,7 @@ def _load_workflows(config_path: str | None = None) -> List[WorkflowItem]:
 
 
 def main(argv: List[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="alfredpy")
+    parser = argparse.ArgumentParser(prog="mif")
     parser.add_argument("--config", "-c", help="Use a custom workflows config file")
     parser.add_argument("--list", "-l", action="store_true", help="List available workflows")
     parser.add_argument("--gui", "-g", action="store_true", help="Launch GUI mode")
@@ -38,7 +38,7 @@ def main(argv: List[str] | None = None) -> int:
 
     # GUI mode - launch Flet application
     if args.gui:
-        from alfredpy.gui.launcher import launch_gui
+        from mif.gui.launcher import launch_gui
         launch_gui(args.config)
         return 0
 
@@ -50,7 +50,7 @@ def main(argv: List[str] | None = None) -> int:
         return 0
 
     if not items:
-        print("No workflows found. Create ~/.alfredpy/workflows.json and add workflows.")
+        print("No workflows found. Create ~/.mif/workflows.json and add workflows.")
         return 1
 
     style = Style.from_dict({"prompt": "bold #00ff00"})

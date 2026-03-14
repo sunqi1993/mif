@@ -3,7 +3,7 @@
 import os
 import socket
 
-_SOCKET_PATH = f"/tmp/alfredpy-gui-{os.getuid()}.sock"
+_SOCKET_PATH = f"/tmp/mif-gui-{os.getuid()}.sock"
 _CMD_SHOW = b"show"
 
 

@@ -7,7 +7,7 @@
     <key>CFBundleDisplayName</key>
     <string>AlfredPy Launcher</string>
     <key>CFBundleExecutable</key>
-    <string>alfredpy</string>
+    <string>mif</string>
     <key>CFBundleVersion</key>
     <string>0.1.0</string>
 </dict>

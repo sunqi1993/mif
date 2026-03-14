@@ -7,11 +7,11 @@ from unittest.mock import MagicMock, patch
 class TestLoadWorkflows:
     """Tests for _load_workflows function."""
 
-    @patch("alfredpy.main.load_config")
+    @patch("mif.main.load_config")
     def test_load_workflows(self, mock_load_config):
         """Test loading workflows from config."""
-        from alfredpy.workflow import WorkflowItem
-        from alfredpy.main import _load_workflows
+        from mif.workflow import WorkflowItem
+        from mif.main import _load_workflows
 
         mock_load_config.return_value = {
             "workflows": [
@@ -25,10 +25,10 @@ class TestLoadWorkflows:
         assert isinstance(workflows[0], WorkflowItem)
         assert workflows[0].name == "Test"
 
-    @patch("alfredpy.main.load_config")
+    @patch("mif.main.load_config")
     def test_load_workflows_empty_config(self, mock_load_config):
         """Test loading workflows from empty config."""
-        from alfredpy.main import _load_workflows
+        from mif.main import _load_workflows
 
         mock_load_config.return_value = {}
 
@@ -36,10 +36,10 @@ class TestLoadWorkflows:
 
         assert len(workflows) == 0
 
-    @patch("alfredpy.main.load_config")
+    @patch("mif.main.load_config")
     def test_load_workflows_with_config_path(self, mock_load_config):
         """Test loading workflows with custom config path."""
-        from alfredpy.main import _load_workflows
+        from mif.main import _load_workflows
 
         mock_load_config.return_value = {"workflows": []}
 
@@ -51,12 +51,12 @@ class TestLoadWorkflows:
 class TestMain:
     """Tests for main function."""
 
-    @patch("alfredpy.main._load_workflows")
+    @patch("mif.main._load_workflows")
     @patch("builtins.print")
     def test_main_list_flag(self, mock_print, mock_load):
         """Test main with --list flag."""
-        from alfredpy.workflow import WorkflowItem
-        from alfredpy.main import main
+        from mif.workflow import WorkflowItem
+        from mif.main import main
 
         mock_load.return_value = [
             WorkflowItem(id="1", name="Test", description="Test Desc", action="print", args={})
@@ -67,11 +67,11 @@ class TestMain:
         assert result == 0
         assert mock_print.call_count >= 1
 
-    @patch("alfredpy.main._load_workflows")
+    @patch("mif.main._load_workflows")
     @patch("builtins.print")
     def test_main_no_workflows(self, mock_print, mock_load):
         """Test main when no workflows available."""
-        from alfredpy.main import main
+        from mif.main import main
 
         mock_load.return_value = []
 
@@ -80,11 +80,11 @@ class TestMain:
         assert result == 1
         assert mock_print.call_count >= 1
 
-    @patch("alfredpy.main._load_workflows")
-    @patch("alfredpy.gui.launcher.launch_gui")
+    @patch("mif.main._load_workflows")
+    @patch("mif.gui.launcher.launch_gui")
     def test_main_gui_flag(self, mock_launch_gui, mock_load):
         """Test main with --gui flag."""
-        from alfredpy.main import main
+        from mif.main import main
 
         mock_load.return_value = []
 
@@ -93,10 +93,10 @@ class TestMain:
         assert result == 0
         mock_launch_gui.assert_called_once()
 
-    @patch("alfredpy.main._load_workflows")
+    @patch("mif.main._load_workflows")
     def test_main_version_flag(self, mock_load):
         """Test main with --version flag."""
-        from alfredpy.main import main
+        from mif.main import main
 
         mock_load.return_value = []
 

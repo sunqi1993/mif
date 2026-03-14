@@ -9,7 +9,7 @@ class TestHotkeyManager:
 
     def test_hotkey_manager_init(self):
         """Test hotkey manager initialization."""
-        from alfredpy.gui.hotkey import GlobalHotkeyManager
+        from mif.gui.hotkey import GlobalHotkeyManager
 
         manager = GlobalHotkeyManager("<alt>+<space>")
 
@@ -19,7 +19,7 @@ class TestHotkeyManager:
 
     def test_hotkey_manager_register_without_pynput(self):
         """Test hotkey manager registration fails gracefully without pynput."""
-        from alfredpy.gui.hotkey import GlobalHotkeyManager, HAS_PYNPUT
+        from mif.gui.hotkey import GlobalHotkeyManager, HAS_PYNPUT
 
         manager = GlobalHotkeyManager()
 
@@ -29,7 +29,7 @@ class TestHotkeyManager:
 
     def test_hotkey_manager_unregister(self):
         """Test hotkey manager unregistration."""
-        from alfredpy.gui.hotkey import GlobalHotkeyManager
+        from mif.gui.hotkey import GlobalHotkeyManager
 
         manager = GlobalHotkeyManager()
         manager.unregister()
@@ -43,13 +43,13 @@ class TestLauncherUI:
 
     def test_launcher_imports(self):
         """Test launcher module imports successfully."""
-        from alfredpy.gui import launcher
+        from mif.gui import launcher
 
         assert hasattr(launcher, "launch_gui")
 
     def test_result_item_creation(self):
         """Test ResultItem creation."""
-        from alfredpy.gui.launcher import ResultItem
+        from mif.gui.launcher import ResultItem
 
         item = ResultItem(title="Test", subtitle="Test Desc", icon="🚀")
         assert item is not None
@@ -60,16 +60,16 @@ class TestGUIIntegration:
 
     def test_gui_launch_function_exists(self):
         """Test GUI launch function exists."""
-        from alfredpy.gui.launcher import launch_gui
+        from mif.gui.launcher import launch_gui
 
         assert callable(launch_gui)
 
-    @patch("alfredpy.config.load_config")
-    @patch("alfredpy.gui.launcher.ft.app")
+    @patch("mif.config.load_config")
+    @patch("mif.gui.launcher.ft.app")
     def test_gui_launch_with_workflows(self, mock_app, mock_load_config):
         """Test GUI launch with workflows."""
-        from alfredpy.gui.launcher import launch_gui
-        from alfredpy.workflow import WorkflowItem
+        from mif.gui.launcher import launch_gui
+        from mif.workflow import WorkflowItem
 
         workflows = [
             WorkflowItem.from_dict(

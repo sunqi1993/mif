@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from alfredpy.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
+from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
 
 logger = logging.getLogger("AlfredPy.ChromeBookmarks")
 
@@ -34,7 +34,7 @@ CLICKS_FILENAME = "chrome_bookmarks_clicks.json"
 
 
 def _clicks_path() -> Path:
-    from alfredpy.config import effective_config_dir
+    from mif.config import effective_config_dir
     return effective_config_dir() / CLICKS_FILENAME
 
 
@@ -169,7 +169,7 @@ class ChromeBookmarksPlugin(BasePlugin):
             name="Chrome 书签",
             description="搜索 Chrome 书签，选中后在浏览器中打开",
             version="1.0.0",
-            author="alfredpy",
+            author="mif",
             icon="📑",
             keywords=["bm", "bookmark", "书签", "chrome"],
             at_keyword="bm",

@@ -1,4 +1,4 @@
-"""Plugin system for alfredpy — discovery, config persistence, @-keyword routing."""
+"""Plugin system for mif — discovery, config persistence, @-keyword routing."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import pkgutil
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from alfredpy.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
+from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
 
 __all__ = [
     "BasePlugin", "ConfigOption", "PluginMeta", "PluginResult",
@@ -21,15 +21,15 @@ class PluginManager:
 
     Config is persisted to the *effective config directory*:
       priority 1 → <project_root>/config/plugin_configs.json
-      priority 2 → ~/.alfredpy/plugin_configs.json  (user fallback)
+      priority 2 → ~/.mif/plugin_configs.json  (user fallback)
 
-    The active path is determined at runtime by ``alfredpy.config.plugin_config_path()``.
+    The active path is determined at runtime by ``mif.config.plugin_config_path()``.
     """
 
     @property
     def CONFIG_PATH(self) -> Path:
         """Dynamic config path — project config/ dir takes priority over user dir."""
-        from alfredpy.config import plugin_config_path
+        from mif.config import plugin_config_path
         return plugin_config_path()
 
     def __init__(self):
@@ -78,13 +78,13 @@ class PluginManager:
 
     def _discover_plugins(self) -> None:
         """Auto-discover every BasePlugin subclass inside this package."""
-        plugins_dir = Path(__file__).parent   # alfredpy/plugins/
+        plugins_dir = Path(__file__).parent   # mif/plugins/
 
         for _, name, _ in pkgutil.iter_modules([str(plugins_dir)]):
             if name == "base":
                 continue
             try:
-                module = importlib.import_module(f"alfredpy.plugins.{name}")
+                module = importlib.import_module(f"mif.plugins.{name}")
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
                     if (

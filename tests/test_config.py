@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from alfredpy.config import (
+from mif.config import (
     DEFAULT_CONFIG,
     DEFAULT_CONFIG_PATH,
     ensure_config_exists,
@@ -71,8 +71,8 @@ class TestLoadConfig:
 
         try:
             # Patch DEFAULT_CONFIG_PATH and PROJECT_CONFIG_PATH
-            with patch("alfredpy.config.DEFAULT_CONFIG_PATH", temp_path), \
-                 patch("alfredpy.config.PROJECT_CONFIG_PATH", PathLib("/nonexistent/path.json")):
+            with patch("mif.config.DEFAULT_CONFIG_PATH", temp_path), \
+                 patch("mif.config.PROJECT_CONFIG_PATH", PathLib("/nonexistent/path.json")):
                 config = load_config()
                 assert "workflows" in config
                 assert len(config["workflows"]) == 1

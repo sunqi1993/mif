@@ -137,7 +137,7 @@ start_gui() {
     fi
     
     print_info "启动 GUI 模式..."
-    $PYTHON -m alfredpy --gui $config_arg
+    $PYTHON -m mif --gui $config_arg
 }
 
 # 启动 TUI 模式
@@ -148,7 +148,7 @@ start_tui() {
     fi
     
     print_info "启动 TUI 模式..."
-    $PYTHON -m alfredpy $config_arg
+    $PYTHON -m mif $config_arg
 }
 
 # 启动热键监听
@@ -156,7 +156,7 @@ start_hotkey() {
     print_info "启动热键监听..."
     print_success "按 Alt+Space 启动 AlfredPy"
     print_info "按 Ctrl+C 退出"
-    $PYTHON -m alfredpy.gui.hotkey
+    $PYTHON -m mif.gui.hotkey
 }
 
 # 启动菜单栏托管 (仅 macOS)
@@ -184,7 +184,7 @@ list_workflows() {
         config_arg="--config $CONFIG_PATH"
     fi
     
-    $PYTHON -m alfredpy --list $config_arg
+    $PYTHON -m mif --list $config_arg
 }
 
 # 主函数

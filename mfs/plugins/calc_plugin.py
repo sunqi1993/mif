@@ -1,6 +1,6 @@
 """Calculator plugin — evaluates arithmetic and math-function expressions.
 
-Configuration options (persistent via ~/.alfredpy/plugin_configs.json):
+Configuration options (persistent via ~/.mif/plugin_configs.json):
   angle_unit   : "radians" | "degrees"  — unit for trig functions (default: radians)
   precision    : int ≥ 0                — decimal places shown (0 = auto, default: 0)
   thousands_sep: bool                   — show thousands separator (default: True)
@@ -10,7 +10,7 @@ import math
 import re
 from typing import List
 
-from alfredpy.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
+from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
 
 
 # ── Base safe namespace (angle-independent parts) ─────────────────────────────
@@ -57,7 +57,7 @@ class CalcPlugin(BasePlugin):
             name="Calculator",
             description="实时计算数学表达式，支持三角函数、对数等",
             version="2.1.0",
-            author="alfredpy",
+            author="mif",
             icon="🧮",
             keywords=["=", "calc", "calculate"],
             at_keyword="calc",        # triggered by @calc in the search box

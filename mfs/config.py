@@ -1,8 +1,8 @@
-"""Unified configuration path resolver and loader for alfredpy.
+"""Unified configuration path resolver and loader for mif.
 
 Config directory priority (highest → lowest):
   1. <project_root>/config/          ← team / project-level settings
-  2. ~/.alfredpy/                    ← per-user fallback
+  2. ~/.mif/                         ← per-user fallback
 
 Writing always goes to the same directory that was used for reading,
 so project-level configs stay in the repo and user configs stay local.
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 # ── Project layout ─────────────────────────────────────────────────────────────
-# This file lives at  <project_root>/alfredpy/config.py
+# This file lives at  <project_root>/mif/config.py
 _PROJECT_ROOT: Path = Path(__file__).parent.parent
 
 _DEFAULT_WORKFLOW_CONFIG: dict = {"workflows": []}
@@ -31,8 +31,8 @@ def project_config_dir() -> Optional[Path]:
 
 
 def user_config_dir() -> Path:
-    """Return ~/.alfredpy/, creating it if necessary."""
-    d = Path.home() / ".alfredpy"
+    """Return ~/.mif/, creating it if necessary."""
+    d = Path.home() / ".mif"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -40,7 +40,7 @@ def user_config_dir() -> Path:
 def effective_config_dir() -> Path:
     """Return the active config directory.
 
-    Priority: <project>/config/  >  ~/.alfredpy/
+    Priority: <project>/config/  >  ~/.mif/
     """
     return project_config_dir() or user_config_dir()
 
@@ -58,7 +58,7 @@ def workflow_config_path() -> Path:
     Priority:
       1. <project>/config/workflows.json
       2. <project>/workflows.json          (legacy, project-root location)
-      3. ~/.alfredpy/workflows.json
+      3. ~/.mif/workflows.json
     """
     cfg = project_config_dir()
     if cfg:
@@ -82,7 +82,7 @@ def load_config(path: str | None = None) -> Any:
     Priority when *path* is None:
       1. <project>/config/workflows.json
       2. <project>/workflows.json  (legacy)
-      3. ~/.alfredpy/workflows.json
+      3. ~/.mif/workflows.json
     """
     if path is not None:
         config_path = Path(path)

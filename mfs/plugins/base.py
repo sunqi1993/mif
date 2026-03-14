@@ -1,4 +1,4 @@
-"""Base classes for alfredpy plugins."""
+"""Base classes for mif plugins."""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -76,7 +76,7 @@ class PluginResult:
 # ── Base plugin ───────────────────────────────────────────────────────────────
 
 class BasePlugin(ABC):
-    """Abstract base class for all alfredpy plugins."""
+    """Abstract base class for all mif plugins."""
 
     def __init__(self):
         self.meta: PluginMeta = self.get_meta()

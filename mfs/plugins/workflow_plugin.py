@@ -13,8 +13,8 @@ from __future__ import annotations
 import logging
 from typing import List, Tuple
 
-from alfredpy.plugins.base import BasePlugin, PluginMeta, PluginResult
-from alfredpy.workflow import WorkflowItem
+from mif.plugins.base import BasePlugin, PluginMeta, PluginResult
+from mif.workflow import WorkflowItem
 
 logger = logging.getLogger("AlfredPy.WorkflowPlugin")
 
@@ -38,7 +38,7 @@ class WorkflowPlugin(BasePlugin):
             name="Workflows",
             description="JSON 配置的自动化快捷指令 (@wf 浏览全部)",
             version="1.0.0",
-            author="alfredpy",
+            author="mif",
             icon="🚀",
             keywords=[],          # override match_keyword to always participate
             at_keyword="wf",      # @wf → browse/filter all workflows
@@ -138,7 +138,7 @@ class WorkflowPlugin(BasePlugin):
     # ── Config loading ────────────────────────────────────────────────────────
 
     def _load(self) -> None:
-        from alfredpy.config import load_config
+        from mif.config import load_config
         self._workflows = []
         try:
             config = load_config()

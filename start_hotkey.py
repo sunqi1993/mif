@@ -16,8 +16,8 @@ def main():
     print()
     
     try:
-        from alfredpy.gui.hotkey import GlobalHotkeyManager
-        from alfredpy.gui.launcher import launch_gui
+from mif.gui.hotkey import GlobalHotkeyManager
+from mif.gui.launcher import launch_gui
     except ImportError as e:
         print(f"❌ 导入失败：{e}")
         print()
