@@ -33,8 +33,16 @@ def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="alfredpy")
     parser.add_argument("--config", "-c", help="Use a custom workflows config file")
     parser.add_argument("--list", "-l", action="store_true", help="List available workflows")
+    parser.add_argument("--gui", "-g", action="store_true", help="Launch GUI mode")
     args = parser.parse_args(argv)
 
+    # GUI mode - launch Flet application
+    if args.gui:
+        from alfredpy.gui.launcher import launch_gui
+        launch_gui(args.config)
+        return 0
+
+    # TUI mode
     items = _load_workflows(args.config)
     if args.list:
         for item in items:
@@ -63,6 +71,3 @@ def main(argv: List[str] | None = None) -> int:
     print("No matching workflow selected.")
     return 1
 
-
-if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))

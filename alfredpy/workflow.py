@@ -1,11 +1,21 @@
 """Workflow and action definitions."""
 
 import json
+import os
+import platform
 import subprocess
 import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Type
+
+# Try to import pyperclip for clipboard support
+try:
+    import pyperclip
+
+    HAS_PYPERCLIP = True
+except ImportError:
+    HAS_PYPERCLIP = False
 
 
 class ActionRegistry:
@@ -91,3 +101,85 @@ def action_open_file(args: dict) -> None:
     if not file_path:
         raise ValueError("`path` is required for open_file action")
     Path(file_path).expanduser().resolve().open()
+
+
+@ActionRegistry.register("copy_to_clipboard")
+def action_copy_to_clipboard(args: dict) -> None:
+    """Copy text to clipboard."""
+    text = args.get("text", "")
+    if not HAS_PYPERCLIP:
+        print("Warning: pyperclip not installed. Clipboard content:", text)
+        return
+    pyperclip.copy(text)
+
+
+@ActionRegistry.register("notify")
+def action_notify(args: dict) -> None:
+    """Send a system notification."""
+    message = args.get("message")
+    if not message:
+        raise ValueError("`message` is required for notify action")
+    title = args.get("title", "Notification")
+
+    system = platform.system()
+    if system == "Darwin":  # macOS
+        subprocess.run(
+            [
+                "osascript",
+                "-e",
+                f'display notification "{message}" with title "{title}"',
+            ]
+        )
+    elif system == "Linux":
+        subprocess.run(["notify-send", title, message])
+    else:  # Windows
+        # Fallback: print to console
+        print(f"[{title}] {message}")
+
+
+@ActionRegistry.register("set_env")
+def action_set_env(args: dict) -> None:
+    """Set an environment variable."""
+    name = args.get("name")
+    value = args.get("value")
+    if not name:
+        raise ValueError("`name` is required for set_env action")
+    if value is None:
+        raise ValueError("`value` is required for set_env action")
+    os.environ[name] = value
+
+
+@ActionRegistry.register("change_dir")
+def action_change_dir(args: dict) -> None:
+    """Change current working directory."""
+    path = args.get("path")
+    if not path:
+        raise ValueError("`path` is required for change_dir action")
+    target_path = Path(path).expanduser().resolve()
+    if target_path.exists() and target_path.is_dir():
+        os.chdir(target_path)
+    else:
+        raise FileNotFoundError(f"Directory not found: {path}")
+
+
+@ActionRegistry.register("write_file")
+def action_write_file(args: dict) -> None:
+    """Write content to a file."""
+    path = args.get("path")
+    content = args.get("content", "")
+    if not path:
+        raise ValueError("`path` is required for write_file action")
+    file_path = Path(path).expanduser().resolve()
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text(content, encoding="utf-8")
+
+
+@ActionRegistry.register("read_file")
+def action_read_file(args: dict) -> None:
+    """Read and print content from a file."""
+    path = args.get("path")
+    if not path:
+        raise ValueError("`path` is required for read_file action")
+    file_path = Path(path).expanduser().resolve()
+    content = file_path.read_text(encoding="utf-8")
+    print(content)

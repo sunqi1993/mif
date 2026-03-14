@@ -5,16 +5,28 @@ description = "A lightweight Alfred-like launcher/workflow runner in Python."
 authors = [
   { name = "Your Name", email = "you@example.com" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
-
-[project.scripts]
-alfredpy = "alfredpy.main:main"
+dependencies = [
+    "prompt_toolkit>=3.0",
+    "flet>=0.21.0",
+    "pynput>=1.7.6",
+]
 
 [project.optional-dependencies]
-ui = ["prompt_toolkit>=3.0"]
-
+search = ["thefuzz>=0.19.0"]
+clipboard = ["pyperclip>=1.8.0"]
+all = [
+    "prompt_toolkit>=3.0",
+    "flet>=0.21.0",
+    "pynput>=1.7.6",
+    "thefuzz>=0.19.0",
+    "pyperclip>=1.8.0",
+]
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["alfredpy"]

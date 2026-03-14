@@ -8,18 +8,52 @@
 - 支持自定义工作流（配置 JSON）
 - 支持插件式扩展（通过 `actions` 定义）
 
-## 🚀 运行
+## 🚀 安装与运行
 
-安装（可选，建议在虚拟环境中运行）：
+### 使用 uv（推荐）
 
 ```bash
-python -m pip install -e .
+# 安装所有依赖
+uv pip install -e ".[all]"
+
+# 或仅安装核心依赖
+uv pip install -e .
+
+# 运行
+alfredpy
 ```
 
-运行：
+### 使用 pip
 
 ```bash
+# 安装核心依赖
+python -m pip install -e .
+
+# 安装所有依赖（包括 GUI 和模糊搜索）
+python -m pip install -e ".[all]"
+
+# 运行
 alfredpy
+```
+
+### 依赖说明
+
+- **核心依赖**：`prompt_toolkit`（CLI 交互）、`flet`（GUI 界面）、`pynput`（全局热键）
+- **可选依赖**：
+  - `thefuzz`（模糊搜索增强，通过 `.[search]` 安装）
+  - `pyperclip`（剪贴板支持，通过 `.[clipboard]` 安装）
+
+- **核心依赖**：`prompt_toolkit`（CLI 交互）、`flet`（GUI 界面）、`pynput`（全局热键）
+- **可选依赖**：`thefuzz`（模糊搜索增强，通过 `.[search]` 安装）
+
+### GUI 启动
+
+```bash
+# 启动 GUI 界面
+python start_gui.py
+
+# 启动全局热键监听（Alt+Space 触发）
+python start_hotkey.py
 ```
 
 ## 🧩 工作流配置
