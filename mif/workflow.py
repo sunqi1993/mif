@@ -1,5 +1,6 @@
 """Workflow and action definitions."""
 
+import logging
 import os
 import platform
 import subprocess
@@ -8,6 +9,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from urllib.parse import quote
+
+from mif.logging_setup import setup_file_logger
+
+logger = setup_file_logger("AlfredPy.Workflow", "mif.log", level=logging.DEBUG)
 
 # Try to import pyperclip for clipboard support
 try:
@@ -128,6 +133,7 @@ def action_copy_to_clipboard(args: dict) -> None:
     """Copy text to clipboard."""
     text = args.get("text", "")
     if not HAS_PYPERCLIP:
+        logger.warning("clipboard_unavailable reason=pyperclip_missing")
         print("Warning: pyperclip not installed. Clipboard content:", text)
         return
     pyperclip.copy(text)
@@ -154,6 +160,7 @@ def action_notify(args: dict) -> None:
         subprocess.run(["notify-send", title, message])
     else:  # Windows
         # Fallback: print to console
+        logger.info("notify_fallback platform=%s title=%r", system, title)
         print(f"[{title}] {message}")
 
 

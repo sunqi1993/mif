@@ -8,9 +8,13 @@ Configuration options (persistent via ~/.mif/plugin_configs.json):
 
 import math
 import re
+import logging
 from typing import List
 
+from mif.logging_setup import setup_file_logger
 from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
+
+logger = setup_file_logger("AlfredPy.CalcPlugin", "mif.log", level=logging.DEBUG)
 
 
 # ── Base safe namespace (angle-independent parts) ─────────────────────────────
@@ -206,5 +210,4 @@ class CalcPlugin(BasePlugin):
             import pyperclip
             pyperclip.copy(result)
         except ImportError:
-            print(f"Result: {result}")
-            print("Tip: pip install pyperclip to enable auto-copy")
+            logger.warning("clipboard_unavailable plugin=calculator result=%s", result)

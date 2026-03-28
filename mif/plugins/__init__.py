@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import List, Optional
 
+from mif.logging_setup import setup_file_logger
 from mif.plugins.base import BasePlugin, ConfigOption, PluginMeta, PluginResult
 from mif.plugins.config_store import PluginConfigStore
 from mif.plugins.coordinator import PluginSearchCoordinator
 from mif.plugins.registry import PluginRegistry
+
+logger = setup_file_logger("AlfredPy.PluginManager", "mif.log", level=logging.DEBUG)
 
 __all__ = [
     "BasePlugin",
@@ -49,7 +53,7 @@ class PluginManager:
             plugin.set_manager(self)
 
         self._config_store.apply_to_plugin(plugin)
-        print(f"✓ Loaded plugin: {plugin.meta.name} v{plugin.meta.version}")
+        logger.info("plugin_loaded id=%s name=%s version=%s", plugin.meta.id, plugin.meta.name, plugin.meta.version)
 
     def unregister(self, plugin_id: str) -> None:
         self._registry.unregister(plugin_id)

@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
+
+from mif.logging_setup import setup_file_logger
+
+
+logger = setup_file_logger("AlfredPy.ApplicationService", "mif.log", level=logging.DEBUG)
 
 
 @dataclass
@@ -21,7 +27,9 @@ class ApplicationService:
         self._plugin_manager = plugin_manager
 
     def search_normal(self, query: str) -> list[UiEntry]:
+        logger.debug("search_start mode=normal query=%r", query)
         all_results = self._plugin_manager.search(query)
+        logger.debug("search_done mode=normal query=%r results=%d", query, len(all_results))
         entries: list[UiEntry] = []
 
         calc_result = None
@@ -104,8 +112,11 @@ class ApplicationService:
     def search_at(self, at_keyword: str, rest: str, plugin=None) -> list[UiEntry]:
         target = plugin if plugin is not None else self.find_at_plugin(at_keyword)
         if target is None:
+            logger.debug("search_done mode=at at=%s query=%r results=0", at_keyword, rest)
             return []
+        logger.debug("search_start mode=at at=%s query=%r", at_keyword, rest)
         results = self._plugin_manager.search_at(at_keyword, rest)
+        logger.debug("search_done mode=at at=%s query=%r results=%d", at_keyword, rest, len(results))
         return [
             UiEntry(
                 title=result.title,
@@ -125,7 +136,16 @@ class ApplicationService:
         plugin = self._plugin_manager.plugins.get(payload.plugin_id)
         if plugin is None:
             return False, "插件不存在或已卸载"
-        plugin.execute(payload)
+        try:
+            plugin.execute(payload)
+        except Exception:
+            logger.exception(
+                "execute_fail plugin=%s title=%r",
+                payload.plugin_id,
+                getattr(payload, "title", ""),
+            )
+            raise
+        logger.debug("execute_done plugin=%s title=%r", payload.plugin_id, getattr(payload, "title", ""))
         return True, f"已执行: {payload.title}"
 
     @staticmethod

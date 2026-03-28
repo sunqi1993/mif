@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import importlib
+import logging
 import pkgutil
 from pathlib import Path
 from typing import Dict
 
+from mif.logging_setup import setup_file_logger
 from mif.plugins.base import BasePlugin
+
+logger = setup_file_logger("AlfredPy.PluginRegistry", "mif.log", level=logging.DEBUG)
 
 
 class PluginRegistry:
@@ -29,7 +33,7 @@ class PluginRegistry:
                         if instance.meta.id not in self.plugins:
                             register_callback(instance)
             except Exception as e:
-                print(f"Failed to load plugin '{name}': {e}")
+                logger.exception("plugin_discover_failed module=%s error=%s", name, e)
 
     def register(self, plugin: BasePlugin) -> None:
         self.plugins[plugin.meta.id] = plugin
